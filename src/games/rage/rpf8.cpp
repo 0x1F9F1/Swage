@@ -433,11 +433,11 @@ namespace Swage::Rage::RPF8
         return 255;
     }
 
-    std::unordered_map<Tuple<u32, u8>, String, HashTuple<u32, u8>> KnownFiles;
+    static std::unordered_map<Tuple<u32, u8>, String, HashTuple<u32, u8>> KnownFiles;
 
-    std::unordered_map<u32, String> PossibleFiles;
+    static std::unordered_map<u32, String> PossibleFiles;
 
-    Pair<StringView, StringView> SplitFileName(StringView name)
+    static Pair<StringView, StringView> SplitFileName(StringView name)
     {
         auto folder = name.rfind('/');
 
@@ -454,7 +454,7 @@ namespace Swage::Rage::RPF8
         return {name, {}};
     }
 
-    void Replace(String& subject, StringView search, StringView replace)
+    static void Replace(String& subject, StringView search, StringView replace)
     {
         for (usize pos = 0; (pos = subject.find(search, pos)) != String::npos; pos += replace.length())
         {
@@ -462,7 +462,7 @@ namespace Swage::Rage::RPF8
         }
     }
 
-    Tuple<StringView, u32, u8> NormalisePath(String& path)
+    static Tuple<StringView, u32, u8> NormalisePath(String& path)
     {
         // TODO: Support other platforms
         Replace(path, "%PLATFORM%", "x64");
@@ -481,7 +481,7 @@ namespace Swage::Rage::RPF8
         return {result, hash, ext_id};
     }
 
-    bool AddPossibleFileName(String path)
+    static bool AddPossibleFileName(String path)
     {
         auto [name, hash, ext] = NormalisePath(path);
 
@@ -524,7 +524,7 @@ namespace Swage::Rage::RPF8
         }
     }
 
-    String GetFileName(u32 hash, u8 ext, char platform)
+    static String GetFileName(u32 hash, u8 ext, char platform)
     {
         static Mutex name_lock;
         LockGuard<Mutex> guard(name_lock);
