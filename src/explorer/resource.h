@@ -1,0 +1,1 @@
+#define IDR_RESOURCES_ZIP 101
