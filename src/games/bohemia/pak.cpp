@@ -169,6 +169,8 @@ namespace Swage::Bohemia
                     // A header for the PAC1 file
                     if (!stream.TryRead(&head, sizeof(head)))
                         throw std::runtime_error("Failed to read HEAD");
+
+                    break;
                 }
 
                 case 0x44415441: // DATA
