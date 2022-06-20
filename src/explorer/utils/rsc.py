@@ -58,11 +58,14 @@ def read_rsc7(file):
     assert magic == 0x37435352
     resource_id = flags & 0xFF
 
+    resource_id2 = (phys_flags >> 28) | (virt_flags >> 28) << 4
+    assert resource_id == resource_id2
+
     virt_offset = 0
-    virt_chunks, virt_size = rsc7_get_chunks(virt_offset, 0x50000000, virt_flags, 0x2000)
+    virt_chunks, virt_size = rsc7_get_chunks(virt_offset, 0x50000000, virt_flags & 0xFFFFFFF, 0x2000)
 
     phys_offset = virt_offset + virt_size
-    phys_chunks, phys_size = rsc7_get_chunks(phys_offset, 0x60000000, phys_flags, 0x2000)
+    phys_chunks, phys_size = rsc7_get_chunks(phys_offset, 0x60000000, phys_flags & 0xFFFFFFF, 0x2000)
 
     rsc_chunks = virt_chunks + phys_chunks
     rsc_data = file.read(virt_size + phys_size)
