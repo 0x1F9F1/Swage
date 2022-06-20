@@ -74,7 +74,7 @@ namespace Swage
         return {path.substr(0, split), path.substr(split)};
     }
 
-    struct VFS::Node final
+    struct VFS::Node
     {
         // Hash of full path
         // The highest bit indicates if the node is a folder

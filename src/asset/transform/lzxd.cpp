@@ -4,7 +4,11 @@
 
 namespace Swage
 {
-#define XCOMP_API __stdcall
+#if defined(_WIN32)
+#    define XCOMP_API __stdcall
+#else
+#    define XCOMP_API
+#endif
 
     typedef enum _XMEMCODEC_TYPE
     {

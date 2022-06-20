@@ -623,7 +623,7 @@ namespace Swage::Rage
                     // fiStream reads data in chunks of 0x1000 (depending on reads)
                     : (is_compressed ? 0x2000 : 0x1000);
 
-                // FIXME: EcbCipherStream assumes the no IV
+                // FIXME: EcbCipherStream assumes the cipher has no IV
                 result = MakeRc<EcbCipherStream>(std::move(result),
                     MakeUnique<RPF8::StridedCipher>(
                         entry.GetEncryptionConfig(), raw_size, std::move(*cipher), chunk_size));
@@ -709,7 +709,7 @@ namespace Swage::Rage
         {
             Vec<char> names(header.NamesLength);
 
-            if (input->ReadBulk(names.data(), names.size(), input->Size() - header.NamesLength))
+            if (input->TryReadBulk(names.data(), names.size(), input->Size() - header.NamesLength))
             {
                 StringView names_view(names.data(), names.size());
 
