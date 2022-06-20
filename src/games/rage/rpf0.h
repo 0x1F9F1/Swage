@@ -25,15 +25,15 @@ namespace Swage::Rage
 
         // Offset (Binary)
         // EntryIndex (Directory)
-        u32 dword1;
+        u32 dword4;
 
         // OnDiskSize (Binary)
         // EntryCount (Directory)
-        u32 dword2;
+        u32 dword8;
 
         // Size (Binary)
         // EntryCount (Directory)
-        u32 dword3;
+        u32 dwordC;
 
         u32 GetNameOffset() const
         {
@@ -42,12 +42,12 @@ namespace Swage::Rage
 
         u32 GetOnDiskSize() const
         {
-            return dword2;
+            return dword8;
         }
 
         u32 GetOffset() const
         {
-            return dword1;
+            return dword4;
         }
 
         bool IsDirectory() const
@@ -57,17 +57,17 @@ namespace Swage::Rage
 
         u32 GetSize() const
         {
-            return dword3;
+            return dwordC;
         }
 
         u32 GetEntryIndex() const
         {
-            return dword1;
+            return dword4;
         }
 
         u32 GetEntryCount() const
         {
-            return dword2;
+            return dword8;
         }
     };
 
