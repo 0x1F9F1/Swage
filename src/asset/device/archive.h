@@ -9,7 +9,7 @@ namespace Swage
 
     struct ArchiveFile
     {
-        using TransformCallback = StaticFunc<Ptr<BinaryTransform>()>;
+        using TransformCallback = TrivialFunc<Ptr<BinaryTransform>()>;
 
         u64 Offset {};
         u64 Size {};
