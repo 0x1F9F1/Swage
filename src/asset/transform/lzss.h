@@ -13,13 +13,13 @@ namespace Swage
         bool Update() override;
 
     private:
-        u16 format_ {0};
+        u16 format_ {};
 
-        u8 buffered_ {0};
+        u8 buffered_ {};
         u8 buffer_[2];
 
-        u16 current_ {0};
-        u16 pending_ {0};
+        u16 current_ {};
+        u16 pending_ {};
         u8 window_[0x1000];
 
         void FlushPending();

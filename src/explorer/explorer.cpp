@@ -16,6 +16,7 @@
 #include "games/angel/dave.h"
 
 #include "games/bohemia/pak.h"
+#include "games/bohemia/pbo.h"
 
 #include "games/rage/rpf0.h"
 #include "games/rage/rpf7.h"
@@ -61,7 +62,10 @@ Rc<FileDevice> LoadArchive(StringView name, Rc<Stream> handle)
     }
 
     if (EndsWithI(name, ".zip") || EndsWithI(name, ".jar"))
-        return LoadZip(handle);
+        return LoadZip(std::move(handle));
+
+    if (EndsWithI(name, ".pbo"))
+        return Bohemia::LoadPBO(std::move(handle));
 
     return nullptr;
 }
