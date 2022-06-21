@@ -1,38 +1,11 @@
 #include "secret.h"
 
 #include "asset/stream.h"
+#include "core/bits.h"
 #include "crc.h"
 
 namespace Swage
 {
-    template <typename T>
-    u8 bsr(T v);
-
-    template <>
-    inline u8 bsr<usize>(usize v)
-    {
-        usize n = 0;
-        usize t;
-
-#define X(N)   \
-    t = n + N; \
-    n = (v >> t) ? t : n
-
-#if (SIZE_MAX >> 32)
-        X(32);
-#endif
-
-        X(16);
-        X(8);
-        X(4);
-        X(2);
-        X(1);
-
-#undef X
-
-        return static_cast<u8>(n);
-    }
-
     template <typename T>
     inline bool bit_test(const T* bits, usize index)
     {
@@ -424,7 +397,7 @@ namespace Swage
     {
         constexpr usize LoadFactor = 256;
 
-        FilterBits = std::clamp<u8>(bsr(Secrets.size() * LoadFactor), 10, 18);
+        FilterBits = std::clamp<u8>(bits::bsr_ceil(Secrets.size() * LoadFactor), 10, 18);
 
         constexpr usize FilterRadix = sizeof(FilterWord) * CHAR_BIT;
         usize filter_size = usize(1) << FilterBits;

@@ -1,11 +1,7 @@
 #include "rsc.h"
 
-namespace Swage::RSC7
+namespace Swage::Rage::RSC7
 {
-    // constexpr const char* streaming_file_exts[] {"rpf", "ydr", "yft", "ydd", "ytd", "ycd", "ybn", "ybd", "ybs", "yld",
-    //     "ypm", "yed", "ypt", "ymt", "ymap", "ypdb", "mrf", "ynv", "yhn", "ysc", "cut", "gfx", "ypl", "yam", "ynd",
-    //     "nod", "yvr", "ywr", "ymf", "ytyp", "ynh", "yfd", "yldb"};
-
     u32 GetChunkCount(u32 flags)
     {
         return ((flags >> 4) & 1) + ((flags >> 5) & 3) + ((flags >> 7) & 0xF) + ((flags >> 8) & 1) +

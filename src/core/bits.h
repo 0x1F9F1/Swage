@@ -13,6 +13,12 @@ namespace Swage::bits
     template <typename T>
     T bswap(T value) noexcept = delete;
 
+    template <typename T>
+    u8 bsr(T v) noexcept;
+
+    template <typename T>
+    u8 bsr_ceil(T v) noexcept;
+
     template <typename... Args>
     SW_FORCEINLINE void bswapv(Args&... args) noexcept
     {
@@ -127,5 +133,61 @@ namespace Swage::bits
     [[nodiscard]] SW_FORCEINLINE f64 bswap<f64>(f64 value) noexcept
     {
         return bit_cast<f64>(bswap<u64>(bit_cast<u64>(value)));
+    }
+
+#define X(N)   \
+    t = n + N; \
+    n = (v >> t) ? t : n
+
+    template <>
+    [[nodiscard]] inline u8 bsr<u32>(u32 v)
+    {
+        usize n = 0;
+        usize t;
+
+        X(16);
+        X(8);
+        X(4);
+        X(2);
+        X(1);
+
+        return static_cast<u8>(n);
+    }
+
+    template <>
+    [[nodiscard]] inline u8 bsr<u64>(u64 v)
+    {
+#if SIZE_MAX >> 32
+        usize n = 0;
+        usize t;
+
+        X(32);
+        X(16);
+        X(8);
+        X(4);
+        X(2);
+        X(1);
+
+        return static_cast<u8>(n);
+#else
+        usize n = 0;
+        u32 lower = static_cast<u32>(v);
+
+        if (u32 upper = static_cast<u32>(v >> 32))
+        {
+            lower = upper;
+            n = 32;
+        }
+
+        return static_cast<u8>(bsr(lower) + n);
+#endif
+    }
+
+#undef X
+
+    template <typename T>
+    [[nodiscard]] inline u8 bsr_ceil(T v) noexcept
+    {
+        return v ? (bsr<T>(v - 1) + 1) : 0;
     }
 } // namespace Swage::bits

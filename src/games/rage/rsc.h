@@ -31,10 +31,8 @@ namespace Swage::Rage
     };
 } // namespace Swage::Rage
 
-namespace Swage::RSC7
+namespace Swage::Rage::RSC7
 {
-    using namespace Rage;
-
     u32 GetChunkCount(u32 flags);
     u32 GetLargeResourceSize(u8 header[16]);
 

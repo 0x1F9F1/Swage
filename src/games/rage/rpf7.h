@@ -6,8 +6,6 @@ namespace Swage
 {
     class Stream;
     class FileDevice;
-
-    struct SecretId;
     class SecretFinder;
 } // namespace Swage
 
