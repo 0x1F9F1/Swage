@@ -1,5 +1,7 @@
 #include "vfs.h"
 
+#include "core/bits.h"
+
 enum class vla_size_t : std::size_t
 {
 };
@@ -14,34 +16,11 @@ void* operator new([[maybe_unused]] std::size_t size, vla_size_t new_size)
 
 namespace Swage
 {
-    static const u32 NODE_HASH_FOLDER_BIT = 0x80000000;
+    static constexpr u32 NODE_HASH_FOLDER_BIT = 0x00000001;
 
-    static inline u32 NodeHashPathPartial(StringView name, u32 hash)
+    static inline u32 NodeHashFinalize(u32 hash, bool is_folder)
     {
-        for (const char v : name)
-        {
-            hash += static_cast<unsigned char>(v);
-            hash += hash << 10;
-            hash ^= hash >> 6;
-        }
-
-        return hash;
-    }
-
-    static inline u32 NodeHashPath(StringView path, u32 seed = 0)
-    {
-        u32 hash = NodeHashPathPartial(path, seed);
-
-        hash += hash << 3;
-        hash ^= hash >> 11;
-        hash += hash << 15;
-
-        hash &= ~NODE_HASH_FOLDER_BIT;
-
-        if (path.empty() || path.back() == '/')
-            hash |= NODE_HASH_FOLDER_BIT;
-
-        return hash;
+        return (hash & ~NODE_HASH_FOLDER_BIT) | (is_folder ? NODE_HASH_FOLDER_BIT : 0);
     }
 
     static inline bool NodeHashIsFolder(u32 hash)
@@ -52,17 +31,6 @@ namespace Swage
     static inline bool NodeHashIsFile(u32 hash)
     {
         return (hash & NODE_HASH_FOLDER_BIT) == 0;
-    }
-
-    static inline bool NodeComparePaths(const char* lhs, const char* rhs, usize len)
-    {
-        for (usize i = 0; i != len; ++i)
-        {
-            if (lhs[i] != rhs[i])
-                return false;
-        }
-
-        return true;
     }
 
     // Like SplitPath, but allows a trailing slash in the basename
@@ -126,9 +94,6 @@ namespace Swage
             return StringView(Name, NameLength);
         }
 
-        // Compare the full path of this node
-        bool ComparePath(StringView path) const;
-
         // Add a node to the end of the child list
         void AddChild(Node* node);
     };
@@ -159,47 +124,13 @@ namespace Swage
         if (IsFolder())
         {
             if (Folder* folder = FolderData)
-            {
                 delete folder;
-            }
         }
         else
         {
             if (File* file = FileData)
-            {
-                Rc(file->Ops)->Delete(file);
-            }
+                std::move(file->Ops)->Delete(file);
         }
-    }
-
-    bool VFS::Node::ComparePath(StringView path) const
-    {
-        const Node* node = this;
-
-        // Compare the segments of each node
-        // Avoid one loop iteration by stopping at the root node (as the name is always empty)
-        while (const Node* parent = node->Parent)
-        {
-            // Get the name of the current node
-            StringView name = node->GetName();
-
-            // Make sure the name isn't too long
-            if (name.size() > path.size())
-                return false;
-
-            // Check if the name matches
-            if (!NodeComparePaths(path.data() + path.size() - name.size(), name.data(), name.size()))
-                return false;
-
-            // Remove the segment of the name which was just compared.
-            path.remove_suffix(name.size());
-
-            // Move to the next (parent) node
-            node = parent;
-        }
-
-        // We've compared the whole node path, so make sure we aren't expecting any more characters.
-        return path.empty();
     }
 
     inline void VFS::Node::AddChild(Node* node)
@@ -231,72 +162,129 @@ namespace Swage
         Clear();
     }
 
-    void VFS::Reserve(usize capacity)
+    void VFS::Clear()
+    {
+        Vec<Node*> buckets;
+        buckets.swap(buckets_);
+
+        node_count_ = 0;
+        hash_shift_ = 0;
+
+        for (Node* n : buckets)
+        {
+            while (n)
+                FreeNode(std::exchange(n, n->NextHash));
+        }
+    }
+
+    void VFS::LinkHash(Node* node)
+    {
+        SwDebugAssert(!buckets_.empty());
+
+        node->NextHash = std::exchange(buckets_[node->Hash >> hash_shift_], node);
+    }
+
+    inline u32 VFS::HashPath(StringView path) const
+    {
+        bool is_folder = true;
+        u32 hash = 0;
+
+        if (!path.empty())
+        {
+            hash = HashPartial(hash, path);
+            is_folder = path.back() == '/';
+        }
+
+        return NodeHashFinalize(hash, is_folder);
+    }
+
+    inline u32 VFS::HashPartial(u32 hash, StringView path) const
+    {
+        constexpr u32 HashFactor = 0x9E3779B1;
+
+        for (const char v : path)
+        {
+            hash += static_cast<unsigned char>(v);
+            hash *= HashFactor;
+        }
+
+        return hash;
+    }
+
+    inline bool VFS::ComparePath(const Node* node, StringView path) const
+    {
+        // Compare the segments of each node
+        // Avoid one loop iteration by stopping at the root node (as the name is always empty)
+        while (const Node* parent = node->Parent)
+        {
+            // Get the name of the current node
+            StringView name = node->GetName();
+
+            // Make sure the name isn't too long
+            if (name.size() > path.size())
+                return false;
+
+            // Check if the name matches
+            if (!ComparePaths(path.data() + path.size() - name.size(), name.data(), name.size()))
+                return false;
+
+            // Remove the segment of the name which was just compared.
+            path.remove_suffix(name.size());
+
+            // Move to the next (parent) node
+            node = parent;
+        }
+
+        // We've compared the whole node path, so make sure we aren't expecting any more characters.
+        return path.empty();
+    }
+
+    inline bool VFS::ComparePaths(const char* lhs, const char* rhs, usize len) const
+    {
+        for (usize i = 0; i != len; ++i)
+        {
+            if (lhs[i] != rhs[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    inline void VFS::Reserve(usize capacity)
     {
         // x + (x >> 2) == x * 1.25. load factor = 1 / 1.25 = 0.8
         capacity += capacity >> 2;
 
         // Don't resize if the bucket count is less.
-        if (capacity <= bucket_count_)
-            return;
+        if (capacity > buckets_.size())
+            Resize(capacity);
+    }
 
-        // Calculate the next power of 2 capacity
-        capacity = GetNextCapacity(capacity);
-        Ptr<Node*[]> buckets = MakeUnique<Node*[]>(capacity);
+    void VFS::Resize(usize capacity)
+    {
+        SwAssert(capacity > 0);
+        u8 cap_bits = bits::bsr_ceil(capacity);
+        cap_bits = std::max<u8>(cap_bits, 5);
 
-        std::swap(bucket_count_, capacity);
-        std::swap(buckets_, buckets);
+        SwAssert(cap_bits < 32);
+        capacity = usize(1) << cap_bits;
+        hash_shift_ = 32 - cap_bits;
 
-        usize total = 0;
+        Vec<Node*> buckets(capacity);
+        buckets.swap(buckets_);
 
-        for (usize i = 0; i < capacity; ++i)
+        for (Node* n : buckets)
         {
-            for (Node* n = buckets[i]; n; ++total)
+            while (n)
                 LinkHash(std::exchange(n, n->NextHash));
         }
-
-        SwDebugAssert(total == node_count_);
-    }
-
-    void VFS::Clear()
-    {
-        usize total = 0;
-
-        for (usize i = 0; i < bucket_count_; ++i)
-        {
-            for (Node* n = buckets_[i]; n; ++total)
-                FreeNode(std::exchange(n, n->NextHash));
-        }
-
-        SwDebugAssert(total == node_count_);
-
-        buckets_.reset();
-        bucket_count_ = 0;
-        node_count_ = 0;
-    }
-
-    usize VFS::GetNextCapacity(usize capacity)
-    {
-        usize result = bucket_count_ ? bucket_count_ : 32;
-
-        while (result < capacity)
-            result <<= 1;
-
-        return result;
-    }
-
-    void VFS::LinkHash(Node* node)
-    {
-        SwDebugAssert(bucket_count_ != 0);
-
-        node->NextHash = std::exchange(buckets_[node->Hash & (bucket_count_ - 1)], node);
     }
 
     VFS::File* VFS::GetFile(StringView name) const
     {
-        if (u32 hash = NodeHashPath(name); NodeHashIsFile(hash))
+        if (u32 hash = HashPath(name); NodeHashIsFile(hash))
         {
-            if (Node* node = FindNode(name))
+            if (Node* node = FindNode(name, hash))
                 return node->FileData;
         }
 
@@ -305,7 +293,7 @@ namespace Swage
 
     VFS::Node* VFS::GetFolder(StringView name) const
     {
-        if (u32 hash = NodeHashPath(name); NodeHashIsFolder(hash))
+        if (u32 hash = HashPath(name); NodeHashIsFolder(hash))
             return FindNode(name, hash);
 
         return nullptr;
@@ -313,21 +301,16 @@ namespace Swage
 
     VFS::Node* VFS::FindNode(StringView name, u32 hash) const
     {
-        if (bucket_count_ == 0)
+        if (hash_shift_ == 0)
             return nullptr;
 
-        for (Node* n = buckets_[hash & (bucket_count_ - 1)]; n; n = n->NextHash)
+        for (Node* n = buckets_[hash >> hash_shift_]; n; n = n->NextHash)
         {
-            if (n->Hash == hash && n->ComparePath(name))
+            if (n->Hash == hash && ComparePath(n, name))
                 return n;
         }
 
         return nullptr;
-    }
-
-    VFS::Node* VFS::FindNode(StringView name) const
-    {
-        return FindNode(name, NodeHashPath(name));
     }
 
     Pair<VFS::Node*, bool> VFS::AddNode(StringView name, u32 hash)
@@ -357,7 +340,7 @@ namespace Swage
         }
         else
         {
-            SwDebugAssert(hash == NodeHashPath(""));
+            SwDebugAssert(hash == HashPath(""));
         }
 
         // Allocate the node
@@ -397,13 +380,17 @@ namespace Swage
 
     bool VFS::Exists(StringView path) const
     {
-        return FindNode(path) != nullptr;
+        // Hash the full path
+        u32 hash = HashPath(path);
+
+        // Check if a node exists at this path
+        return FindNode(path, hash) != nullptr;
     }
 
     VFS::File** VFS::AddFile(StringView name)
     {
         // Hash the full path
-        u32 hash = NodeHashPath(name);
+        u32 hash = HashPath(name);
 
         // Make sure the name is not a folder
         if (!NodeHashIsFile(hash))
@@ -417,7 +404,7 @@ namespace Swage
     VFS::Node* VFS::AddFolder(StringView name)
     {
         // Hash the full path
-        u32 hash = NodeHashPath(name);
+        u32 hash = HashPath(name);
 
         // Make sure the name is a folder
         if (!NodeHashIsFolder(hash))

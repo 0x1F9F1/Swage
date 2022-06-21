@@ -18,7 +18,6 @@ namespace Swage
         VFS(const VFS&) = delete;
         VFS& operator=(const VFS&) = delete;
 
-        void Reserve(usize capacity);
         void Clear();
 
         bool Exists(StringView path) const;
@@ -39,9 +38,6 @@ namespace Swage
         // Find a node with the given name and hash
         Node* FindNode(StringView name, u32 hash) const;
 
-        // Find a node with the given name
-        Node* FindNode(StringView name) const;
-
         // Allocate and construct a new node
         Node* AllocNode(u32 hash, StringView name);
 
@@ -57,15 +53,21 @@ namespace Swage
         // Find or create a new node
         Pair<Node*, bool> AddNode(StringView name, u32 hash);
 
-        // Get the next valid capacity
-        usize GetNextCapacity(usize capacity);
-
         // Link a node to the hash table
         void LinkHash(Node* node);
 
+        u32 HashPath(StringView path) const;
+        u32 HashPartial(u32 hash, StringView path) const;
+
+        bool ComparePath(const Node* node, StringView path) const;
+        bool ComparePaths(const char* lhs, const char* rhs, usize len) const;
+
+        void Reserve(usize capacity);
+        void Resize(usize capacity);
+
         usize node_count_ {};
-        usize bucket_count_ {};
-        Ptr<Node* []> buckets_ {};
+        u8 hash_shift_ {};
+        Vec<Node*> buckets_ {};
     };
 
     // TODO: Should this be AtomicRefCounted?
@@ -90,15 +92,13 @@ namespace Swage
         File(const File&) = delete;
         File& operator=(const File&) = delete;
 
-        FileOperations* Ops;
+        Rc<FileOperations> Ops;
     };
 
     // Returns the (dirname, basename) pair of the path
     Pair<StringView, StringView> SplitPath(StringView path);
 
     inline VFS::File::File(FileOperations* ops)
-        : Ops(ops)
-    {
-        Ops->AddRef();
-    }
+        : Ops(AddRc(ops))
+    {}
 } // namespace Swage

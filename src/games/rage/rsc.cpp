@@ -69,4 +69,4 @@ namespace Swage::Rage::RSC7
 
         return chunks;
     }
-} // namespace Swage::RSC7
+} // namespace Swage::Rage::RSC7

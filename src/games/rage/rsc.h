@@ -39,4 +39,4 @@ namespace Swage::Rage::RSC7
     u64 GetResourceSize(u32 flags, u32 chunk_size);
 
     Vec<datResourceChunk> GetChunkMap(u32 flags, u32 chunk_size, u64 vaddr, u64& total);
-} // namespace Swage::RSC7
+} // namespace Swage::Rage::RSC7
