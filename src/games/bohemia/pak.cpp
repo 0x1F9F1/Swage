@@ -6,35 +6,35 @@
 
 namespace Swage::Bohemia
 {
-    struct FormHeader
+    using namespace bits;
+
+    struct IFF_Chunk
     {
-        u32 Magic;
-        u32 FileSize;
-        u32 FileType;
+        be<u32> ID;
+        be<u32> Size;
     };
 
-    static_assert(sizeof(FormHeader) == 0xC);
+    static_assert(sizeof(IFF_Chunk) == 0x8);
 
-    struct FormItem
+    struct IFF_Form : IFF_Chunk
     {
-        u32 Type;
-        u32 Size;
+        be<u32> FormType;
     };
 
-    static_assert(sizeof(FormItem) == 0x8);
+    static_assert(sizeof(IFF_Form) == 0xC);
 
-    struct FormItem_HEAD
+    struct PackHeader
     {
-        u32 PackItemVersion;
-        u32 field_4;
-        u32 field_8;
-        u32 field_C;
-        u32 field_10;
-        u32 field_14;
-        u32 field_18;
+        le<u32> PackItemVersion;
+        le<u32> field_4;
+        le<u32> field_8;
+        le<u32> field_C;
+        le<u32> field_10;
+        le<u32> field_14;
+        le<u32> field_18;
     };
 
-    static_assert(sizeof(FormItem_HEAD) == 0x1C);
+    static_assert(sizeof(PackHeader) == 0x1C);
 
     struct PackItem
     {
@@ -46,18 +46,46 @@ namespace Swage::Bohemia
 
     struct PackItemDirectory
     {
-        u32 NumItems;
+        le<u32> NumItems;
     };
 
-    struct PackItemFile_10003
+    static_assert(sizeof(PackItemDirectory) == 0x4);
+
+    struct PackItemFile
     {
-        u32 Offset;
-        u32 DiskSize;
-        u64 Size;
-        u16 field_10;
-        u8 CompType;
-        u8 field_13;
-        u32 TimeStamp;
+        ple<u32> Offset;
+        ple<u32> DiskSize;
+        ple<u32> Size;
+        ple<u32> field_C;
+        ple<u16> field_10;
+        ple<u8> CompFlags1; // 2 bits
+        ple<u8> CompFlags2; // 4 bits
+    };
+
+    static_assert(sizeof(PackItemFile) == 0x14);
+
+    struct PackItemFile_10000 : PackItemFile
+    {};
+
+    static_assert(sizeof(PackItemFile_10000) == 0x14);
+
+    struct PackItemFile_10001 : PackItemFile_10000
+    {
+        u8 TimeStamp[7];
+    };
+
+    static_assert(sizeof(PackItemFile_10001) == 0x1B);
+
+    struct PackItemFile_10002 : PackItemFile_10000
+    {
+        ple<u32> TimeStamp;
+    };
+
+    static_assert(sizeof(PackItemFile_10002) == 0x18);
+
+    struct PackItemFile_10003 : PackItemFile_10000
+    {
+        ple<u32> TimeStamp;
     };
 
     static_assert(sizeof(PackItemFile_10003) == 0x18);
@@ -67,14 +95,14 @@ namespace Swage::Bohemia
     public:
         PakArchive(Rc<Stream> input);
 
-        void AddToVFS(VFS& vfs, BufferedStream& stream, FormItem_HEAD& header, String& path, u32 num_items);
+        void AddToVFS(VFS& vfs, BufferedStream& stream, PackHeader& header, String& path, u32 num_items);
     };
 
     PakArchive::PakArchive(Rc<Stream> input)
         : FileArchive(std::move(input))
     {}
 
-    void PakArchive::AddToVFS(VFS& vfs, BufferedStream& stream, FormItem_HEAD& header, String& path, u32 num_items)
+    void PakArchive::AddToVFS(VFS& vfs, BufferedStream& stream, PackHeader& header, String& path, u32 num_items)
     {
         for (u32 i = 0; i < num_items; ++i)
         {
@@ -101,27 +129,67 @@ namespace Swage::Bohemia
             }
             else if (item.Type == 1) // File
             {
-                ArchiveFile info;
+                PackItemFile file;
 
                 switch (header.PackItemVersion)
                 {
+                    case 0x10000: {
+                        PackItemFile_10000 file_10000;
+
+                        if (!stream.TryRead(&file_10000, sizeof(file_10000)))
+                            throw std::runtime_error("Failed to read file header");
+
+                        file = file_10000;
+                        break;
+                    }
+
+                    case 0x10001: {
+                        PackItemFile_10001 file_10001;
+
+                        if (!stream.TryRead(&file_10001, sizeof(file_10001)))
+                            throw std::runtime_error("Failed to read file header");
+
+                        file = file_10001;
+                        break;
+                    }
+
+                    case 0x10002: {
+                        PackItemFile_10003 file_10002;
+
+                        if (!stream.TryRead(&file_10002, sizeof(file_10002)))
+                            throw std::runtime_error("Failed to read file header");
+
+                        file = file_10002;
+                        break;
+                    }
+
                     case 0x10003: {
-                        PackItemFile_10003 file;
+                        PackItemFile_10003 file_10003;
 
-                        if (!stream.TryRead(&file, sizeof(file)))
-                            throw std::runtime_error("Failed to read file");
+                        if (!stream.TryRead(&file_10003, sizeof(file_10003)))
+                            throw std::runtime_error("Failed to read file header");
 
-                        if (file.CompType == 1)
-                            info = ArchiveFile::Deflated(file.Offset, file.Size, file.DiskSize, 15);
-                        else
-                            info = ArchiveFile::Stored(file.Offset, file.Size);
-
+                        file = file_10003;
                         break;
                     }
 
                     default: {
                         throw std::runtime_error("Invalid pack item version");
                     }
+                }
+
+                ArchiveFile info;
+
+                if (file.CompFlags2 != 0)
+                {
+                    if (file.CompFlags1 == 1)
+                        info = ArchiveFile::Deflated(file.Offset, file.Size, file.DiskSize, 15);
+                    else
+                        info = ArchiveFile::Stored(file.Offset, file.Size); // TODO: Handle other compressors?
+                }
+                else
+                {
+                    info = ArchiveFile::Stored(file.Offset, file.Size);
                 }
 
                 AddFile(vfs, path, info);
@@ -136,38 +204,35 @@ namespace Swage::Bohemia
         BufferedStream stream(input);
         stream.Rewind();
 
-        FormHeader header;
+        IFF_Form header;
 
         if (!stream.TryRead(&header, sizeof(header)))
             throw std::runtime_error("Failed to read header");
 
-        bits::bswapv(header.Magic, header.FileSize, header.FileType);
-
-        if (header.Magic != 0x464F524D) // FORM
+        if (header.ID != 0x464F524D) // FORM
             throw std::runtime_error("Invalid header magic");
 
-        if (header.FileType != 0x50414331) // PAC1
+        if (header.FormType != 0x50414331) // PAC1
             throw std::runtime_error("Invalid header file type");
 
         u64 next_item = stream.Tell();
-        FormItem_HEAD head {};
+        PackHeader pack_header {};
 
         while (true)
         {
-            FormItem item;
+            IFF_Chunk item;
 
             if (!stream.TrySeek(next_item) || !stream.TryRead(&item, sizeof(item)))
                 break;
 
-            bits::bswapv(item.Type, item.Size);
             next_item = stream.Tell() + item.Size;
 
-            switch (item.Type)
+            switch (item.ID)
             {
                 case 0x48454144: // HEAD
                 {
                     // A header for the PAC1 file
-                    if (!stream.TryRead(&head, sizeof(head)))
+                    if (!stream.TryRead(&pack_header, sizeof(pack_header)))
                         throw std::runtime_error("Failed to read HEAD");
 
                     break;
@@ -188,7 +253,7 @@ namespace Swage::Bohemia
                     Rc<PakArchive> fops = MakeRc<PakArchive>(input);
 
                     String path;
-                    fops->AddToVFS(device->Files, stream, head, path, 1);
+                    fops->AddToVFS(device->Files, stream, pack_header, path, 1);
 
                     return device;
                 }

@@ -26,6 +26,25 @@ namespace Swage::bits
     }
 
     template <typename T>
+    using le = T;
+
+    template <typename T>
+    struct be
+    {
+        T data;
+
+        SW_FORCEINLINE operator T() const noexcept
+        {
+            return bswap<T>(data);
+        }
+
+        SW_FORCEINLINE be& operator=(const T& value) noexcept
+        {
+            data = bswap<T>(value);
+        }
+    };
+
+    template <typename T>
     struct packed
     {
         u8 data[sizeof(T)];
@@ -44,10 +63,10 @@ namespace Swage::bits
     };
 
     template <typename T>
-    using le = T;
+    using ple = packed<le<T>>;
 
     template <typename T>
-    using ple = packed<le<T>>;
+    using pbe = packed<be<T>>;
 
     template <typename To, typename From>
     [[nodiscard]] SW_FORCEINLINE To bit_cast(const From& src) noexcept
