@@ -25,15 +25,6 @@ namespace Swage
 
         bool FlushBuffer();
 
-        template <typename T>
-        [[nodiscard]] bool Get(T& value);
-
-        template <typename T>
-        [[nodiscard]] bool Get(T* values, usize count);
-
-        template <typename T>
-        T Get();
-
         i32 GetCh();
         i32 UnGetCh(i32 ch);
 
@@ -83,31 +74,6 @@ namespace Swage
     inline i64 BufferedStream::Tell()
     {
         return position_ + buffer_head_;
-    }
-
-    template <typename T>
-    inline bool BufferedStream::Get(T& value)
-    {
-        return Read(&value, sizeof(value)) == sizeof(value);
-    }
-
-    template <typename T>
-    inline bool BufferedStream::Get(T* values, usize count)
-    {
-        return Read(values, count * sizeof(*values)) == count * sizeof(*values);
-    }
-
-    template <typename T>
-    inline T BufferedStream::Get()
-    {
-        T value;
-
-        if (Read(&value, sizeof(value)) == sizeof(value))
-        {
-            return value;
-        }
-
-        return {};
     }
 
     inline i32 BufferedStream::GetCh()
