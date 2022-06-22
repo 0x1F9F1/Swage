@@ -470,7 +470,7 @@ namespace Swage::Rage::RPF8
         for (char& c : path)
             c = ToLower(c);
 
-        auto [name, ext] = SplitFileName(path);
+        const auto [name, ext] = SplitFileName(path);
 
         u8 ext_id = GetFileExtId(ext);
 
@@ -483,7 +483,7 @@ namespace Swage::Rage::RPF8
 
     static bool AddPossibleFileName(String path)
     {
-        auto [name, hash, ext] = NormalisePath(path);
+        const auto [name, hash, ext] = NormalisePath(path);
 
         return PossibleFiles.try_emplace(hash, name).second;
     }
@@ -492,7 +492,7 @@ namespace Swage::Rage::RPF8
     {
         for (String path; input.GetLine(path); path.clear())
         {
-            auto [name, hash, ext] = NormalisePath(path);
+            const auto [name, hash, ext] = NormalisePath(path);
 
             KnownFiles.try_emplace(Tuple<u32, u8> {hash, ext}, name);
         }
@@ -502,7 +502,7 @@ namespace Swage::Rage::RPF8
     {
         for (const auto& file : KnownFiles)
         {
-            auto [hash, ext_id] = file.first;
+            const auto [hash, ext_id] = file.first;
 
             output.PutString(file.second);
 

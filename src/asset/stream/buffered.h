@@ -34,9 +34,6 @@ namespace Swage
 
         void PutString(StringView str);
 
-        static Ptr<BufferedStream> Open(StringView path, bool read_only = true);
-        static Ptr<BufferedStream> Create(StringView path, bool write_only = true, bool truncate = true);
-
     private:
         i64 RawTell() const;
         i64 RawSize() const;

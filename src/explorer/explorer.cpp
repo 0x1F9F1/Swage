@@ -718,7 +718,7 @@ void ShowWindow()
     {
         String script_path = Concat("user:/scripts/", g_CurrentScriptName);
 
-        if (Rc<BufferedStream> s = BufferedStream::Open(script_path))
+        if (Rc<Stream> s = AssetManager::Open(script_path))
         {
             String script_code = s->ReadText();
             s = nullptr;
@@ -762,35 +762,35 @@ void LoadLegacyKeys()
         }
     };
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/gtav_pc_keys.bin"); s && s->Size() == 0x1CE40)
+    if (Rc<Stream> s = AssetManager::Open("user:/gtav_pc_keys.bin"); s && s->Size() == 0x1CE40)
     {
         add_secrets(*s, 101, 0x140); // Keys
         add_secrets(*s, 84, 0x400);  // Tables
     }
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/gtav_ps4_keys.bin"); s && s->Size() == 0xCA0)
+    if (Rc<Stream> s = AssetManager::Open("user:/gtav_ps4_keys.bin"); s && s->Size() == 0xCA0)
         add_secrets(*s, 101, 0x20);
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/gtav_ps3_keys.bin"); s && s->Size() == 0x20)
+    if (Rc<Stream> s = AssetManager::Open("user:/gtav_ps3_keys.bin"); s && s->Size() == 0x20)
         add_secrets(*s, 1, 0x20);
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/gtav_360_keys.bin"); s && s->Size() == 0x20)
+    if (Rc<Stream> s = AssetManager::Open("user:/gtav_360_keys.bin"); s && s->Size() == 0x20)
         add_secrets(*s, 1, 0x20);
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/launcher_keys.bin"); s && s->Size() == 0x20)
+    if (Rc<Stream> s = AssetManager::Open("user:/launcher_keys.bin"); s && s->Size() == 0x20)
         add_secrets(*s, 1, 0x20);
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/rage_default_keys.bin"); s && s->Size() == 0x20)
+    if (Rc<Stream> s = AssetManager::Open("user:/rage_default_keys.bin"); s && s->Size() == 0x20)
         add_secrets(*s, 1, 0x20);
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/rdr2_android_keys.bin"); s && s->Size() == 0x21D10)
+    if (Rc<Stream> s = AssetManager::Open("user:/rdr2_android_keys.bin"); s && s->Size() == 0x21D10)
     {
         add_secrets(*s, 164, 0x140); // Keys
         add_secrets(*s, 84, 0x400);  // Tables
         add_secrets(*s, 1, 0x10);    // IV
     }
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/rdr2_ps4_keys.bin"); s && s->Size() == 0x21D10)
+    if (Rc<Stream> s = AssetManager::Open("user:/rdr2_ps4_keys.bin"); s && s->Size() == 0x21D10)
     {
         add_secrets(*s, 164, 0x140); // Keys
         add_secrets(*s, 84, 0x400);  // Tables
@@ -802,7 +802,7 @@ void SearchForKeys()
 {
     LoadLegacyKeys();
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/extra_secrets.bin"))
+    if (Rc<Stream> s = AssetManager::Open("user:/extra_secrets.bin"))
         Secrets.Load(*s);
 
     String temp_path = Win32PathExpandEnvStrings("%TEMP%/");
@@ -890,7 +890,7 @@ void SearchForKeys()
 
     LoadKeys();
 
-    if (Rc<BufferedStream> s = BufferedStream::Create("user:/secrets.bin"))
+    if (Rc<Stream> s = AssetManager::Create("user:/secrets.bin"))
         Secrets.Save(*s);
 }
 
@@ -921,7 +921,7 @@ i32 ArchiveExplorerApplication::Init()
 {
     String game_dir = "";
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/config.yaml"))
+    if (Rc<Stream> s = AssetManager::Open("user:/config.yaml"))
     {
         YAML::Node config = YAML::Load(s->ReadText());
 
@@ -931,19 +931,27 @@ i32 ArchiveExplorerApplication::Init()
 
     AssetManager::Mount("", true, LoadZip(MakeRc<ResourceStream>(nullptr, IDR_RESOURCES_ZIP, "ZIP")));
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/secrets.bin"))
+    if (Rc<Stream> s = AssetManager::Open("user:/secrets.bin"))
         Secrets.Load(*s);
 
     LoadKeys();
 
-    if (Rc<BufferedStream> s = BufferedStream::Create("user:/secrets.bin"))
+    if (Rc<Stream> s = AssetManager::Create("user:/secrets.bin"))
         Secrets.Save(*s);
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/rdr2_files.txt"))
-        Rage::RPF8::LoadFileList(*s);
+    if (Rc<Stream> s = AssetManager::Open("user:/rdr2_files.txt"))
+    {
+        BufferedStream reader(s);
 
-    if (Rc<BufferedStream> s = BufferedStream::Open("user:/rdr2_possible_files.txt"))
-        Rage::RPF8::LoadPossibleFileList(*s);
+        Rage::RPF8::LoadFileList(reader);
+    }
+
+    if (Rc<Stream> s = AssetManager::Open("user:/rdr2_possible_files.txt"))
+    {
+        BufferedStream reader(s);
+
+        Rage::RPF8::LoadPossibleFileList(reader);
+    }
 
     window_ = SDL_CreateWindow("Archive Explorer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 960,
         SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
@@ -1016,9 +1024,14 @@ i32 ArchiveExplorerApplication::Shutdown()
         g_LuaState = nullptr;
     }
 
-    Rage::RPF8::SaveFileList(*BufferedStream::Create("user:/rdr2_files.txt"));
+    if (Rc<Stream> s = AssetManager::Create("user:/rdr2_files.txt"))
+    {
+        BufferedStream writer(s);
 
-    if (Rc<BufferedStream> s = BufferedStream::Create("user:/config.yaml"))
+        Rage::RPF8::SaveFileList(writer);
+    }
+
+    if (Rc<Stream> s = AssetManager::Create("user:/config.yaml"))
     {
         YAML::Node config;
 

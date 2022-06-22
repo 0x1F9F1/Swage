@@ -221,26 +221,6 @@ namespace Swage
         return true;
     }
 
-    Ptr<BufferedStream> BufferedStream::Open(StringView path, bool read_only)
-    {
-        Rc<Stream> handle = AssetManager::Open(path, read_only);
-
-        if (!handle)
-            return nullptr;
-
-        return MakeUnique<BufferedStream>(std::move(handle));
-    }
-
-    Ptr<BufferedStream> BufferedStream::Create(StringView path, bool write_only, bool truncate)
-    {
-        Rc<Stream> handle = AssetManager::Create(path, write_only, truncate);
-
-        if (!handle)
-            return nullptr;
-
-        return MakeUnique<BufferedStream>(std::move(handle));
-    }
-
     bool BufferedStream::FlushBuffer()
     {
         return FlushReads() && FlushWrites();
