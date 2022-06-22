@@ -39,7 +39,7 @@ namespace Swage
         return nullptr;
     }
 
-    bool FileDevice::Extension([[maybe_unused]] StringView path, [[maybe_unused]] FileDeviceExtension& ext)
+    bool FileDevice::Extension([[maybe_unused]] StringView path, [[maybe_unused]] const ExtensionData& ext)
     {
         return false;
     }

@@ -6,28 +6,23 @@ namespace Swage::Rage
 {
     struct datResourceInfo
     {
-        u32 VirtualFlags {0};
-        u32 PhysicalFlags {0};
+        u32 VirtualFlags {};
+        u32 PhysicalFlags {};
     };
 
     struct datResourceFileHeader
     {
-        u32 Magic {0};
-        u32 Flags {0};
-        datResourceInfo ResourceInfo;
+        u32 Magic {};
+        u32 Flags {};
+        datResourceInfo ResourceInfo {};
+
+        static constexpr StringView ExtensionName = "datResourceFileHeader";
     };
 
     struct datResourceChunk
     {
         u64 Addr;
         u64 Size;
-    };
-
-    struct ResourceFileHeaderExtension : FileDeviceExtensionT<ResourceFileHeaderExtension>
-    {
-        datResourceFileHeader Header;
-
-        static constexpr const StringView ExtensionName = "ResourceFileHeader";
     };
 } // namespace Swage::Rage
 

@@ -509,7 +509,7 @@ namespace Swage
         return nullptr;
     }
 
-    bool VFS::FileOperations::Extension([[maybe_unused]] File& file, [[maybe_unused]] FileDeviceExtension& data)
+    bool VFS::FileOperations::Extension([[maybe_unused]] File& file, [[maybe_unused]] const ExtensionData& data)
     {
         return false;
     }

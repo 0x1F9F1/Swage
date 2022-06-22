@@ -4,7 +4,7 @@
 
 namespace Swage
 {
-    struct FileDeviceExtension;
+    struct ExtensionData;
 
     class VFS
     {
@@ -83,7 +83,7 @@ namespace Swage
         virtual Rc<Stream> Open(File& file) = 0;
         virtual void Stat(File& file, FolderEntry& entry) = 0;
 
-        virtual bool Extension(File& file, FileDeviceExtension& data);
+        virtual bool Extension(File& file, const ExtensionData& data);
     };
 
     class VFS::File

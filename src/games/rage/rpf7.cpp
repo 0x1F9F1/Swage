@@ -215,7 +215,7 @@ namespace Swage::Rage
 
         Rc<Stream> Open(File& file) override;
         void Stat(File& file, FolderEntry& entry) override;
-        bool Extension(File& file, FileDeviceExtension& data) override;
+        bool Extension(File& file, const ExtensionData& data) override;
 
         StringView GetEntryName(const fiPackEntry7& entry);
         u64 GetEntrySize(const fiPackEntry7& entry);
@@ -344,12 +344,12 @@ namespace Swage::Rage
         output.Size = GetEntrySize(entry);
     }
 
-    bool fiPackfile7::Extension(File& file, FileDeviceExtension& data)
+    bool fiPackfile7::Extension(File& file, const ExtensionData& data)
     {
         const fiPackEntry7& entry = GetData(file);
 
-        if (ResourceFileHeaderExtension* ext = data.As<ResourceFileHeaderExtension>())
-            return entry.GetResourceFileHeader(ext->Header);
+        if (datResourceFileHeader* header = data.As<datResourceFileHeader>())
+            return entry.GetResourceFileHeader(*header);
 
         return false;
     }

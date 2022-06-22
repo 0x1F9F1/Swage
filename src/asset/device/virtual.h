@@ -14,7 +14,7 @@ namespace Swage
         bool Exists(StringView path) override;
 
         Ptr<FileEnumerator> Enumerate(StringView path) override;
-        bool Extension(StringView path, FileDeviceExtension& data) override;
+        bool Extension(StringView path, const ExtensionData& data) override;
 
         VFS Files {};
     };

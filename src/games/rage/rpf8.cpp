@@ -570,7 +570,7 @@ namespace Swage::Rage
 
         Rc<Stream> Open(File& file) override;
         void Stat(File& file, FolderEntry& entry) override;
-        bool Extension(File& file, FileDeviceExtension& data) override;
+        bool Extension(File& file, const ExtensionData& data) override;
 
         void AddToVFS(VFS& vfs, const fiPackEntry8& entry);
 
@@ -656,12 +656,12 @@ namespace Swage::Rage
         stat.Size = entry.GetSize();
     }
 
-    bool fiPackfile8::Extension(File& file, FileDeviceExtension& data)
+    bool fiPackfile8::Extension(File& file, const ExtensionData& data)
     {
         const fiPackEntry8& entry = GetData(file);
 
-        if (ResourceFileHeaderExtension* ext = data.As<ResourceFileHeaderExtension>())
-            return entry.GetResourceFileHeader(ext->Header);
+        if (datResourceFileHeader* header = data.As<datResourceFileHeader>())
+            return entry.GetResourceFileHeader(*header);
 
         return false;
     }

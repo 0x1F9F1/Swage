@@ -2,33 +2,41 @@
 
 namespace Swage
 {
-    struct FileDeviceExtension
+    struct ExtensionData
     {
-    protected:
-        StringView Name;
-        usize Size {0};
+        template <typename T>
+        ExtensionData(T* data)
+            : ExtensionData(T::ExtensionName, data)
+        {}
 
-        FileDeviceExtension(StringView name, usize size)
+        template <typename T>
+        ExtensionData(StringView name, T* data)
+            : ExtensionData(name, data, sizeof(*data))
+        {}
+
+        ExtensionData(StringView name, void* data, usize size)
             : Name(name)
+            , Data(data)
             , Size(size)
         {}
 
-    public:
         template <typename T>
-        T* As()
+        T* As() const
         {
-            if (Size == sizeof(T) && Name == T::ExtensionName)
-                return static_cast<T*>(this);
+            return As<T>(T::ExtensionName);
+        }
+
+        template <typename T>
+        T* As(StringView name) const
+        {
+            if (name == Name && sizeof(T) == Size)
+                return static_cast<T*>(Data);
 
             return nullptr;
         }
-    };
 
-    template <typename T>
-    struct FileDeviceExtensionT : FileDeviceExtension
-    {
-        FileDeviceExtensionT()
-            : FileDeviceExtension(T::ExtensionName, sizeof(T))
-        {}
+        StringView const Name;
+        void* const Data;
+        usize const Size;
     };
 } // namespace Swage

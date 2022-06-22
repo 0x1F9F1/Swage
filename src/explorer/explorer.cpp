@@ -164,11 +164,11 @@ bool ExtractFile(
 
         if (g_AddResourceFileHeader)
         {
-            Rage::ResourceFileHeaderExtension ext;
+            Rage::datResourceFileHeader rsc_header;
 
-            if (device->Extension(input_path, ext))
+            if (device->Extension(input_path, &rsc_header))
             {
-                output->Write(&ext.Header, sizeof(ext.Header));
+                output->Write(&rsc_header, sizeof(rsc_header));
             }
         }
 

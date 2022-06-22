@@ -25,7 +25,7 @@ namespace Swage
         return Files.Enumerate(path);
     }
 
-    bool VirtualFileDevice::Extension(StringView path, FileDeviceExtension& data)
+    bool VirtualFileDevice::Extension(StringView path, const ExtensionData& data)
     {
         if (VFS::File* file = Files.GetFile(path))
             return file->Ops->Extension(*file, data);

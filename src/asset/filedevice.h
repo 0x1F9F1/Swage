@@ -4,7 +4,7 @@
 
 namespace Swage
 {
-    struct FileDeviceExtension;
+    struct ExtensionData;
 
     class FileDevice : public AtomicRefCounted
     {
@@ -33,6 +33,6 @@ namespace Swage
         // Move
         // GetPackProvider
 
-        virtual bool Extension(StringView path, FileDeviceExtension& data);
+        virtual bool Extension(StringView path, const ExtensionData& data);
     };
 } // namespace Swage
