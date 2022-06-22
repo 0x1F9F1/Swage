@@ -452,6 +452,9 @@ namespace Swage::Rage
                 entry.SetDecryptionTag(header.DecryptionTag);
         }
 
+        if (!entries[0].IsDirectory())
+            throw std::runtime_error("Root entry is not a directory");
+
         Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
         Rc<fiPackfile7> fops = MakeRc<fiPackfile7>(std::move(input), header, std::move(names));
 
