@@ -5,8 +5,8 @@
 
 namespace Swage::Angel
 {
-    static_assert(sizeof(DaveHeader) == 0x10);
-    static_assert(sizeof(DaveEntry) == 0x10);
+    static_assert(is_c_struct_v<DaveHeader, 0x10>);
+    static_assert(is_c_struct_v<DaveEntry, 0x10>);
 
     static void ReadDaveStringRaw(const Vec<char>& names, usize offset, u32 bit_index, String& output)
     {

@@ -14,14 +14,15 @@ namespace Swage::Bohemia
         be<u32> Size;
     };
 
-    static_assert(sizeof(IFF_Chunk) == 0x8);
+    static_assert(is_c_struct_v<IFF_Chunk, 0x8>);
 
-    struct IFF_Form : IFF_Chunk
+    struct IFF_Form
     {
+        IFF_Chunk Chunk;
         be<u32> FormType;
     };
 
-    static_assert(sizeof(IFF_Form) == 0xC);
+    static_assert(is_c_struct_v<IFF_Form, 0xC>);
 
     struct PackHeader
     {
@@ -34,7 +35,7 @@ namespace Swage::Bohemia
         le<u32> field_18;
     };
 
-    static_assert(sizeof(PackHeader) == 0x1C);
+    static_assert(is_c_struct_v<PackHeader, 0x1C>);
 
     struct PackItem
     {
@@ -42,14 +43,14 @@ namespace Swage::Bohemia
         u8 NameLength;
     };
 
-    static_assert(sizeof(PackItem) == 0x2);
+    static_assert(is_c_struct_v<PackItem, 0x2>);
 
     struct PackItemDirectory
     {
         le<u32> NumItems;
     };
 
-    static_assert(sizeof(PackItemDirectory) == 0x4);
+    static_assert(is_c_struct_v<PackItemDirectory, 0x4>);
 
     struct PackItemFile
     {
@@ -62,33 +63,38 @@ namespace Swage::Bohemia
         ple<u8> CompFlags2; // 4 bits
     };
 
-    static_assert(sizeof(PackItemFile) == 0x14);
+    static_assert(is_c_struct_v<PackItemFile, 0x14>);
 
-    struct PackItemFile_10000 : PackItemFile
-    {};
-
-    static_assert(sizeof(PackItemFile_10000) == 0x14);
-
-    struct PackItemFile_10001 : PackItemFile_10000
+    struct PackItemFile_10000
     {
+        PackItemFile File;
+    };
+
+    static_assert(is_c_struct_v<PackItemFile_10000, 0x14>);
+
+    struct PackItemFile_10001
+    {
+        PackItemFile File;
         u8 TimeStamp[7];
     };
 
-    static_assert(sizeof(PackItemFile_10001) == 0x1B);
+    static_assert(is_c_struct_v<PackItemFile_10001, 0x1B>);
 
-    struct PackItemFile_10002 : PackItemFile_10000
+    struct PackItemFile_10002
     {
+        PackItemFile File;
         ple<u32> TimeStamp;
     };
 
-    static_assert(sizeof(PackItemFile_10002) == 0x18);
+    static_assert(is_c_struct_v<PackItemFile_10002, 0x18>);
 
-    struct PackItemFile_10003 : PackItemFile_10000
+    struct PackItemFile_10003
     {
+        PackItemFile File;
         ple<u32> TimeStamp;
     };
 
-    static_assert(sizeof(PackItemFile_10003) == 0x18);
+    static_assert(is_c_struct_v<PackItemFile_10003, 0x18>);
 
     class PakArchive final : public FileArchive
     {
@@ -139,7 +145,7 @@ namespace Swage::Bohemia
                         if (!stream.TryRead(&file_10000, sizeof(file_10000)))
                             throw std::runtime_error("Failed to read file header");
 
-                        file = file_10000;
+                        file = file_10000.File;
                         break;
                     }
 
@@ -149,7 +155,7 @@ namespace Swage::Bohemia
                         if (!stream.TryRead(&file_10001, sizeof(file_10001)))
                             throw std::runtime_error("Failed to read file header");
 
-                        file = file_10001;
+                        file = file_10001.File;
                         break;
                     }
 
@@ -159,7 +165,7 @@ namespace Swage::Bohemia
                         if (!stream.TryRead(&file_10002, sizeof(file_10002)))
                             throw std::runtime_error("Failed to read file header");
 
-                        file = file_10002;
+                        file = file_10002.File;
                         break;
                     }
 
@@ -169,7 +175,7 @@ namespace Swage::Bohemia
                         if (!stream.TryRead(&file_10003, sizeof(file_10003)))
                             throw std::runtime_error("Failed to read file header");
 
-                        file = file_10003;
+                        file = file_10003.File;
                         break;
                     }
 
@@ -209,7 +215,7 @@ namespace Swage::Bohemia
         if (!stream.TryRead(&header, sizeof(header)))
             throw std::runtime_error("Failed to read header");
 
-        if (header.ID != 0x464F524D) // FORM
+        if (header.Chunk.ID != 0x464F524D) // FORM
             throw std::runtime_error("Invalid header magic");
 
         if (header.FormType != 0x50414331) // PAC1

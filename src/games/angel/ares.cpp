@@ -7,8 +7,8 @@
 
 namespace Swage::Angel
 {
-    static_assert(sizeof(AresHeader) == 0x10);
-    static_assert(sizeof(VirtualFileINode) == 0xC);
+    static_assert(is_c_struct_v<AresHeader, 0x10>);
+    static_assert(is_c_struct_v<VirtualFileINode, 0xC>);
 
     class AresArchive final : public FileArchive
     {

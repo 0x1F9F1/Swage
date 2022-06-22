@@ -4,8 +4,8 @@
 
 namespace Swage::Rage
 {
-    static_assert(sizeof(fiPackHeader0) == 0xC);
-    static_assert(sizeof(fiPackEntry0) == 0x10);
+    static_assert(is_c_struct_v<fiPackHeader0, 0xC>);
+    static_assert(is_c_struct_v<fiPackEntry0, 0x10>);
 
     class fiPackfile0 final : public FileArchive
     {

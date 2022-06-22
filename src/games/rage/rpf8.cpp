@@ -559,8 +559,34 @@ namespace Swage::Rage::RPF8
 
 namespace Swage::Rage
 {
-    static_assert(sizeof(fiPackHeader8) == 0x10);
-    static_assert(sizeof(fiPackEntry8) == 0x18);
+    static_assert(is_c_struct_v<fiPackHeader8, 0x10>);
+    static_assert(is_c_struct_v<fiPackEntry8, 0x18>);
+
+    bool fiPackEntry8::GetResourceFileHeader(datResourceFileHeader& info) const
+    {
+        if (!IsResource())
+            return false;
+
+#if 1
+        u32 bits0 = GetResourceId();
+        u32 bits8 = ((0 - 1) & 0x1F) << 8;
+        u32 bits15 = false << 15;
+        u32 bits16 = (0xFF + 1) << 16;
+#else
+        u32 bits0 = GetResourceId();
+        u32 bits8 = ((GetCompressorId() - 1) & 0x1F) << 8;
+        u32 bits15 = IsSignatureProtected() << 15;
+        u32 bits16 = (GetEncryptionKeyId() + 1) << 16;
+#endif
+
+        info.Magic = 0x38435352; // RSC8
+        info.Flags = bits0 | bits8 | bits15 | bits16;
+
+        info.ResourceInfo.VirtualFlags = GetVirtualFlags();
+        info.ResourceInfo.PhysicalFlags = GetPhysicalFlags();
+
+        return true;
+    }
 
     // TODO: Handle lookup by name and hash
     class fiPackfile8 final : public FileOperationsT<fiPackEntry8>

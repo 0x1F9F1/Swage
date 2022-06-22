@@ -86,7 +86,7 @@ namespace Swage::Bohemia
         }
     };
 
-    static_assert(sizeof(RawPboEntry) == 0x14);
+    static_assert(is_c_struct_v<RawPboEntry, 0x14>);
 
     Rc<FileDevice> LoadPBO(Rc<Stream> input)
     {

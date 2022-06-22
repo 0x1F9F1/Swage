@@ -88,6 +88,9 @@ namespace Swage
         return values.size() * sizeof(*values.data());
     }
 
+    template <typename T, usize N>
+    constexpr bool is_c_struct_v = (sizeof(T) == N && std::is_standard_layout_v<T> && std::is_trivial_v<T>);
+
     inline bool Stream::Rewind()
     {
         return TrySeek(0);

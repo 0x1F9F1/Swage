@@ -172,10 +172,22 @@ namespace Swage::Rage::RPF7
 
 namespace Swage::Rage
 {
-    static_assert(sizeof(fiPackHeader7) == 0x10);
-    static_assert(sizeof(fiPackEntry7) == 0x10);
+    static_assert(is_c_struct_v<fiPackHeader7, 0x10>);
+    static_assert(is_c_struct_v<fiPackEntry7, 0x10>);
 
-    using namespace RPF7;
+    bool fiPackEntry7::GetResourceFileHeader(datResourceFileHeader& info) const
+    {
+        if (!IsResource())
+            return false;
+
+        info.Magic = 0x37435352;
+        info.Flags = GetResourceVersion();
+
+        info.ResourceInfo.VirtualFlags = GetVirtualFlags();
+        info.ResourceInfo.PhysicalFlags = GetPhysicalFlags();
+
+        return true;
+    }
 
     static u32 CalculateKeyIndex(StringView path, u64 file_size)
     {
@@ -327,7 +339,8 @@ namespace Swage::Rage
         Rc<Stream> result = MakeRc<PartialStream>(offset, raw_size, Input);
 
         if (key_index != -1)
-            result = MakeRc<EcbCipherStream>(std::move(result), MakeCipher(Header, CalculateKeyIndex(name, key_index)));
+            result = MakeRc<EcbCipherStream>(
+                std::move(result), RPF7::MakeCipher(Header, CalculateKeyIndex(name, key_index)));
 
         if (Header.GetPlatformBit())
             result = MakeRc<DecodeStream>(std::move(result), MakeUnique<LzxdDecompressor>(), size);
@@ -408,7 +421,7 @@ namespace Swage::Rage
 
         u32 header_key = CalculateKeyIndex(name, input->Size());
 
-        if (Ptr<Cipher> cipher = MakeCipher(header, header_key))
+        if (Ptr<Cipher> cipher = RPF7::MakeCipher(header, header_key))
         {
             fiPackEntry7 root = entries[0];
             cipher->Update(&root, sizeof(root));
@@ -422,7 +435,7 @@ namespace Swage::Rage
                 {
                     for (header_key = 0; header_key < 101; ++header_key)
                     {
-                        if (cipher = MakeCipher(header, header_key))
+                        if (cipher = RPF7::MakeCipher(header, header_key))
                         {
                             root = entries[0];
                             cipher->Update(&root, sizeof(root));

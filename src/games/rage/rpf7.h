@@ -120,19 +120,7 @@ namespace Swage::Rage
             return dwordC;
         }
 
-        bool GetResourceFileHeader(datResourceFileHeader& info) const
-        {
-            if (!IsResource())
-                return false;
-
-            info.Magic = 0x37435352;
-            info.Flags = GetResourceVersion();
-
-            info.ResourceInfo.VirtualFlags = GetVirtualFlags();
-            info.ResourceInfo.PhysicalFlags = GetPhysicalFlags();
-
-            return true;
-        }
+        bool GetResourceFileHeader(datResourceFileHeader& info) const;
     };
 
     Rc<FileDevice> LoadRPF7(Rc<Stream> input, StringView name);
