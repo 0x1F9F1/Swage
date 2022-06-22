@@ -16,21 +16,26 @@ void* operator new([[maybe_unused]] std::size_t size, vla_size_t new_size)
 
 namespace Swage
 {
-    static constexpr u32 NODE_HASH_FOLDER_BIT = 0x00000001;
+    static constexpr u32 NodeHashFactor = 0x9E3779B1;
+    static constexpr u32 NodeHashFolderBit = 0x00000001;
 
     static inline u32 NodeHashFinalize(u32 hash, bool is_folder)
     {
-        return (hash & ~NODE_HASH_FOLDER_BIT) | (is_folder ? NODE_HASH_FOLDER_BIT : 0);
+        hash *= NodeHashFactor;
+        hash &= ~NodeHashFolderBit;
+        hash |= is_folder ? NodeHashFolderBit : 0;
+
+        return hash;
     }
 
     static inline bool NodeHashIsFolder(u32 hash)
     {
-        return (hash & NODE_HASH_FOLDER_BIT) != 0;
+        return (hash & NodeHashFolderBit) != 0;
     }
 
     static inline bool NodeHashIsFile(u32 hash)
     {
-        return (hash & NODE_HASH_FOLDER_BIT) == 0;
+        return (hash & NodeHashFolderBit) == 0;
     }
 
     // Like SplitPath, but allows a trailing slash in the basename
@@ -129,7 +134,7 @@ namespace Swage
         else
         {
             if (File* file = FileData)
-                std::move(file->Ops)->Delete(file);
+                Rc(file->Ops)->Delete(file);
         }
     }
 
@@ -155,7 +160,64 @@ namespace Swage
         folder->LastChild = node;
     }
 
-    VFS::VFS() = default;
+    static u32 NodeHashPath(u32 hash, const char* path, usize len)
+    {
+        for (usize i = 0; i != len; ++i)
+        {
+            hash *= NodeHashFactor;
+            hash += static_cast<unsigned char>(path[i]);
+        }
+
+        return hash;
+    }
+
+    static u32 NodeHashPathI(u32 hash, const char* path, usize len)
+    {
+        for (usize i = 0; i != len; ++i)
+        {
+            hash *= NodeHashFactor;
+            hash += static_cast<unsigned char>(ToLower(path[i]));
+        }
+
+        return hash;
+    }
+
+    static usize NodeMatchSuffix(const char* path, usize path_len, const char* name, usize name_len)
+    {
+        if (name_len > path_len)
+            return SIZE_MAX;
+
+        path += path_len - name_len;
+
+        for (usize i = 0; i != name_len; ++i)
+        {
+            if (path[i] != name[i])
+                return SIZE_MAX;
+        }
+
+        return name_len;
+    }
+
+    static usize NodeMatchSuffixI(const char* path, usize path_len, const char* name, usize name_len)
+    {
+        if (name_len > path_len)
+            return SIZE_MAX;
+
+        path += path_len - name_len;
+
+        for (usize i = 0; i != name_len; ++i)
+        {
+            if (ToLower(path[i]) != ToLower(name[i]))
+                return SIZE_MAX;
+        }
+
+        return name_len;
+    }
+
+    VFS::VFS(bool case_sensitive)
+        : hash_path_(case_sensitive ? NodeHashPath : NodeHashPathI)
+        , match_suffix_(case_sensitive ? NodeMatchSuffix : NodeMatchSuffixI)
+    {}
 
     VFS::~VFS()
     {
@@ -186,33 +248,22 @@ namespace Swage
 
     inline u32 VFS::HashPath(StringView path) const
     {
-        bool is_folder = true;
         u32 hash = 0;
+        bool is_folder = true;
 
         if (!path.empty())
         {
-            hash = HashPartial(hash, path);
+            hash = hash_path_(hash, path.data(), path.size());
             is_folder = path.back() == '/';
         }
 
         return NodeHashFinalize(hash, is_folder);
     }
 
-    inline u32 VFS::HashPartial(u32 hash, StringView path) const
+    inline bool VFS::ComparePath(const Node* node, StringView full_path) const
     {
-        constexpr u32 HashFactor = 0x9E3779B1;
+        StringView path = full_path;
 
-        for (const char v : path)
-        {
-            hash += static_cast<unsigned char>(v);
-            hash *= HashFactor;
-        }
-
-        return hash;
-    }
-
-    inline bool VFS::ComparePath(const Node* node, StringView path) const
-    {
         // Compare the segments of each node
         // Avoid one loop iteration by stopping at the root node (as the name is always empty)
         while (const Node* parent = node->Parent)
@@ -220,16 +271,15 @@ namespace Swage
             // Get the name of the current node
             StringView name = node->GetName();
 
-            // Make sure the name isn't too long
-            if (name.size() > path.size())
-                return false;
+            // Try and match this name segment
+            usize matched = match_suffix_(path.data(), path.size(), name.data(), name.size());
 
             // Check if the name matches
-            if (!ComparePaths(path.data() + path.size() - name.size(), name.data(), name.size()))
+            if (matched == SIZE_MAX)
                 return false;
 
             // Remove the segment of the name which was just compared.
-            path.remove_suffix(name.size());
+            path.remove_suffix(matched);
 
             // Move to the next (parent) node
             node = parent;
@@ -237,17 +287,6 @@ namespace Swage
 
         // We've compared the whole node path, so make sure we aren't expecting any more characters.
         return path.empty();
-    }
-
-    inline bool VFS::ComparePaths(const char* lhs, const char* rhs, usize len) const
-    {
-        for (usize i = 0; i != len; ++i)
-        {
-            if (lhs[i] != rhs[i])
-                return false;
-        }
-
-        return true;
     }
 
     inline void VFS::Reserve(usize capacity)

@@ -12,7 +12,7 @@ namespace Swage
         class File;
         class FileOperations;
 
-        VFS();
+        VFS(bool case_sensitive = false);
         ~VFS();
 
         VFS(const VFS&) = delete;
@@ -57,21 +57,23 @@ namespace Swage
         void LinkHash(Node* node);
 
         u32 HashPath(StringView path) const;
-        u32 HashPartial(u32 hash, StringView path) const;
-
         bool ComparePath(const Node* node, StringView path) const;
-        bool ComparePaths(const char* lhs, const char* rhs, usize len) const;
 
         void Reserve(usize capacity);
         void Resize(usize capacity);
+
+        using PathHasher = u32 (*)(u32 hash, const char* path, usize len);
+        using PathMatcher = usize (*)(const char* path, usize path_len, const char* name, usize name_len);
+
+        PathHasher const hash_path_ {};
+        PathMatcher const match_suffix_ {};
 
         usize node_count_ {};
         u8 hash_shift_ {};
         Vec<Node*> buckets_ {};
     };
 
-    // TODO: Should this be AtomicRefCounted?
-    class VFS::FileOperations : public RefCounted
+    class VFS::FileOperations : public AtomicRefCounted
     {
     public:
         using File = VFS::File;
@@ -92,13 +94,15 @@ namespace Swage
         File(const File&) = delete;
         File& operator=(const File&) = delete;
 
-        Rc<FileOperations> Ops;
+        FileOperations* const Ops;
     };
 
     // Returns the (dirname, basename) pair of the path
     Pair<StringView, StringView> SplitPath(StringView path);
 
     inline VFS::File::File(FileOperations* ops)
-        : Ops(AddRc(ops))
-    {}
+        : Ops(ops)
+    {
+        Ops->AddRef();
+    }
 } // namespace Swage
