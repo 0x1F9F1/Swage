@@ -61,7 +61,7 @@ namespace Swage::Rage
         if (header.Magic != 0x30465052)
             throw std::runtime_error("Invalid header magic");
 
-        u32 entries_size = header.EntryCount * sizeof(fiPackEntry0);
+        usize entries_size = header.EntryCount * sizeof(fiPackEntry0);
 
         if (header.HeaderSize <= entries_size)
             throw std::runtime_error("Invalid header size");
@@ -71,10 +71,9 @@ namespace Swage::Rage
         if (!input->TryReadBulk(entries.data(), ByteSize(entries), TOC_OFFSET))
             throw std::runtime_error("Failed to read entries");
 
-        u32 names_size = header.HeaderSize - entries_size;
-        Vec<char> names(names_size);
+        Vec<char> names(header.HeaderSize - entries_size);
 
-        if (!input->TryReadBulk(names.data(), ByteSize(names), TOC_OFFSET + header.HeaderSize - names_size))
+        if (!input->TryReadBulk(names.data(), ByteSize(names), TOC_OFFSET + entries_size))
             throw std::runtime_error("Failed to read names");
 
         // rage::fiPackfile::FindEntry assumes the first entry is a directory (and ignores its name)

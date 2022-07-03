@@ -19,6 +19,7 @@
 
 #include "core/bits.h"
 
+#include "rsc.h"
 #include "utils.h"
 
 namespace Swage::Rage::RPF8

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "rsc.h"
-
 namespace Swage
 {
     class Stream;
@@ -11,6 +9,8 @@ namespace Swage
 
 namespace Swage::Rage
 {
+    struct datResourceFileHeader;
+
     struct fiPackHeader7
     {
         u32 Magic;

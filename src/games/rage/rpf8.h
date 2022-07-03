@@ -1,7 +1,5 @@
 #pragma once
 
-#include "rsc.h"
-
 namespace Swage
 {
     class Stream;
@@ -13,6 +11,8 @@ namespace Swage
 
 namespace Swage::Rage
 {
+    struct datResourceFileHeader;
+
     struct fiPackHeader8
     {
         u32 Magic;
@@ -162,10 +162,10 @@ namespace Swage::Rage
 
             if (IsResource())
             {
-                u64 size0 = GetVirtualSize();
-                u64 size1 = GetPhysicalSize();
+                u64 virt_size = GetVirtualSize();
+                u64 phys_size = GetPhysicalSize();
 
-                return size0 + size1;
+                return virt_size + phys_size;
             }
             else
             {
