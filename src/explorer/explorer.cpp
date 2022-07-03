@@ -720,7 +720,7 @@ void ShowWindow()
 
         if (Rc<Stream> s = AssetManager::Open(script_path))
         {
-            String script_code = s->ReadText();
+            String script_code = s->ReadAllText();
             s = nullptr;
 
             SwLogInfo("Executing Script {}", g_CurrentScriptName);
@@ -923,7 +923,7 @@ i32 ArchiveExplorerApplication::Init()
 
     if (Rc<Stream> s = AssetManager::Open("user:/config.yaml"))
     {
-        YAML::Node config = YAML::Load(s->ReadText());
+        YAML::Node config = YAML::Load(s->ReadAllText());
 
         game_dir = config["lastdir"].as<String>("");
         g_CurrentScriptName = config["lastscript"].as<String>("");

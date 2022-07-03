@@ -71,6 +71,9 @@ namespace Swage
         bool Rewind();
         i64 DistToEnd();
 
+        usize SafeRead(void* ptr, usize len);
+        usize SafeWrite(const void* ptr, usize len);
+
         [[nodiscard]] bool TrySeek(u64 offset);
 
         [[nodiscard]] bool TryRead(void* ptr, usize len);
@@ -78,8 +81,8 @@ namespace Swage
 
         [[nodiscard]] bool TryWrite(const void* ptr, usize len);
 
-        String ReadText();
-        Vec<u8> ReadBytes();
+        String ReadAllText();
+        Vec<u8> ReadAllBytes();
     };
 
     template <typename T>
@@ -110,16 +113,17 @@ namespace Swage
 
     inline bool Stream::TryRead(void* ptr, usize len)
     {
-        return Read(ptr, len) == len;
+        return SafeRead(ptr, len) == len;
     }
 
     inline bool Stream::TryReadBulk(void* ptr, usize len, i64 offset)
     {
+        // TODO: Implement SafeReadBulk
         return ReadBulk(ptr, len, offset) == len;
     }
 
     inline bool Stream::TryWrite(const void* ptr, usize len)
     {
-        return Write(ptr, len) == len;
+        return SafeWrite(ptr, len) == len;
     }
 } // namespace Swage

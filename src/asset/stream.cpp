@@ -136,17 +136,17 @@ namespace Swage
 
         while (true)
         {
-            usize len = Read(buffer.get(), buffer_len);
+            usize read = SafeRead(buffer.get(), buffer_len);
 
-            if (len == 0)
+            if (read == 0)
                 break;
 
-            len = output.Write(buffer.get(), len);
+            usize written = output.SafeWrite(buffer.get(), read);
 
-            if (len == 0)
+            total += written;
+
+            if (written < read)
                 break;
-
-            total += len;
         }
 
         return total;
@@ -170,10 +170,44 @@ namespace Swage
         return MakeRc<SyncStream>(stream);
     }
 
+    usize Stream::SafeRead(void* ptr, usize len)
+    {
+        usize total = 0;
+
+        while (total < len)
+        {
+            usize read = Read(static_cast<u8*>(ptr) + total, len - total);
+
+            if (read == 0)
+                break;
+
+            total += read;
+        }
+
+        return total;
+    }
+
+    usize Stream::SafeWrite(const void* ptr, usize len)
+    {
+        usize total = 0;
+
+        while (total < len)
+        {
+            usize written = Write(static_cast<const u8*>(ptr) + total, len - total);
+
+            if (written == 0)
+                break;
+
+            total += written;
+        }
+
+        return total;
+    }
+
     static const i64 MaxBlobSize = 1 << 30;
     static_assert(MaxBlobSize <= SIZE_MAX);
 
-    String Stream::ReadText()
+    String Stream::ReadAllText()
     {
         i64 length = DistToEnd();
 
@@ -181,11 +215,11 @@ namespace Swage
             throw std::runtime_error("Invalid stream size");
 
         String result(static_cast<usize>(length), '\0');
-        result.resize(Read(result.data(), result.size()));
+        result.resize(SafeRead(result.data(), result.size()));
         return result;
     }
 
-    Vec<u8> Stream::ReadBytes()
+    Vec<u8> Stream::ReadAllBytes()
     {
         i64 length = DistToEnd();
 
@@ -193,7 +227,7 @@ namespace Swage
             throw std::runtime_error("Invalid stream size");
 
         Vec<u8> result(static_cast<usize>(length));
-        result.resize(Read(result.data(), result.size()));
+        result.resize(SafeRead(result.data(), result.size()));
         return result;
     }
 } // namespace Swage
