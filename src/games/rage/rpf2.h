@@ -19,7 +19,7 @@ namespace Swage::Rage
 
     struct fiPackEntry2
     {
-        // NameOffset
+        // NameOffset/NameHash
         u32 dword0;
 
         // OnDiskSize
@@ -40,6 +40,11 @@ namespace Swage::Rage
         u32 dwordC;
 
         u32 GetNameOffset() const
+        {
+            return dword0;
+        }
+
+        u32 GetHash() const
         {
             return dword0;
         }
@@ -112,4 +117,9 @@ namespace Swage::Rage
     };
 
     Rc<VirtualFileDevice> LoadRPF2(Rc<Stream> input);
+
+    using fiPackHeader3 = fiPackHeader2;
+    using fiPackEntry3 = fiPackEntry2;
+
+    Rc<VirtualFileDevice> LoadRPF3(Rc<Stream> input);
 } // namespace Swage::Rage

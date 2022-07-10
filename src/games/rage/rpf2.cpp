@@ -12,6 +12,7 @@ namespace Swage::Rage
     static_assert(is_c_struct_v<fiPackEntry2, 0x10>);
 
     static const char* GTA4_PC_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
+    static const char* MCLA_360_KEY_HASH = "AOHXW606r+x;@QZ+A|cr";
 
     class fiPackfile2 final : public FileOperationsT<fiPackEntry2>
     {
@@ -81,7 +82,12 @@ namespace Swage::Rage
             usize old_size = path.size();
 
             const fiPackEntry2& entry = entries.at(i);
-            path += SubCString(names, entry.GetNameOffset());
+
+            // TODO: Dehash names
+            if (Header.Magic == 0x33465052)
+                fmt::format_to(std::back_inserter(path), "${:08X}", entry.GetHash());
+            else
+                path += SubCString(names, entry.GetNameOffset());
 
             if (entry.IsDirectory())
             {
@@ -107,7 +113,7 @@ namespace Swage::Rage
         if (!input->TryReadBulk(&header, sizeof(header), 0))
             throw std::runtime_error("Failed to read header");
 
-        if (header.Magic != 0x32465052)
+        if (header.Magic != 0x32465052 && header.Magic != 0x33465052)
             throw std::runtime_error("Invalid header magic");
 
         usize entries_size = header.EntryCount * sizeof(fiPackEntry2);
@@ -127,18 +133,40 @@ namespace Swage::Rage
 
         if (header.HeaderDecryptionTag)
         {
-            u8 key[32];
+            bool found = false;
 
-            if (!Secrets.Get(GTA4_PC_KEY_HASH, key, sizeof(key)))
-                throw std::runtime_error("Missing cipher key");
-
-            AesEcbCipher cipher(key, sizeof(key), true);
-
-            for (usize i = 0; i < 16; ++i)
+            for (const char* key_hash : {GTA4_PC_KEY_HASH, MCLA_360_KEY_HASH})
             {
-                cipher.Cipher::Update(entries.data(), ByteSize(entries));
-                cipher.Cipher::Update(names.data(), ByteSize(names));
+                u8 key[32];
+
+                if (!Secrets.Get(key_hash, key, sizeof(key)))
+                    continue;
+
+                AesEcbCipher cipher(key, sizeof(key), true);
+
+                fiPackEntry2 root = entries.at(0);
+
+                for (usize i = 0; i < 16; ++i)
+                    cipher.Cipher::Update(&root, sizeof(root));
+
+                if (!root.IsDirectory())
+                    continue;
+
+                if (std::max<u32>({root.GetEntryIndex(), root.GetEntryCount(),
+                        root.GetEntryIndex() + root.GetEntryCount() - 1}) >= entries.size())
+                    continue;
+
+                found = true;
+
+                for (usize i = 0; i < 16; ++i)
+                {
+                    cipher.Cipher::Update(entries.data(), ByteSize(entries));
+                    cipher.Cipher::Update(names.data(), ByteSize(names));
+                }
             }
+
+            if (!found)
+                throw std::runtime_error("Missing/Unknown header encryption");
         }
 
         // rage::fiPackfile::FindEntry assumes the first entry is a directory (and ignores its name)
@@ -154,5 +182,10 @@ namespace Swage::Rage
         fops->AddToVFS(device->Files, entries, names, path, root);
 
         return device;
+    }
+
+    Rc<VirtualFileDevice> LoadRPF3(Rc<Stream> input)
+    {
+        return LoadRPF2(std::move(input));
     }
 } // namespace Swage::Rage
