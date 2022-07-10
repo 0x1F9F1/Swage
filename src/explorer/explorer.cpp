@@ -941,9 +941,6 @@ i32 ArchiveExplorerApplication::Init()
 
     LoadKeys();
 
-    if (Rc<Stream> s = AssetManager::Create("user:/secrets.bin"))
-        Secrets.Save(*s);
-
     if (Rc<Stream> s = AssetManager::Open("user:/rdr2_files.txt"))
     {
         BufferedStream reader(s);
