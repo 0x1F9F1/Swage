@@ -14,10 +14,10 @@ namespace Swage::bits
     T bswap(T value) noexcept = delete;
 
     template <typename T>
-    u8 bsr(T v) noexcept;
+    u8 bsr(T value) noexcept;
 
     template <typename T>
-    u8 bsr_ceil(T v) noexcept;
+    u8 bsr_ceil(T value) noexcept;
 
     template <typename... Args>
     SW_FORCEINLINE void bswapv(Args&... args) noexcept
@@ -76,7 +76,7 @@ namespace Swage::bits
         static_assert(std::is_trivially_copyable<To>::value, "To is not trivially copyable");
 
         alignas(To) unsigned char dst[sizeof(To)];
-        std::memcpy(&dst, &src, sizeof(To));
+        std::memcpy(&dst, &reinterpret_cast<const char&>(src), sizeof(To));
         return reinterpret_cast<To&>(dst);
     }
 
@@ -156,10 +156,10 @@ namespace Swage::bits
 
 #define X(N)   \
     t = n + N; \
-    n = (v >> t) ? t : n
+    n = (value >> t) ? t : n
 
     template <>
-    [[nodiscard]] inline u8 bsr<u32>(u32 v)
+    [[nodiscard]] inline u8 bsr<u32>(u32 value)
     {
         usize n = 0;
         usize t;
@@ -174,7 +174,7 @@ namespace Swage::bits
     }
 
     template <>
-    [[nodiscard]] inline u8 bsr<u64>(u64 v)
+    [[nodiscard]] inline u8 bsr<u64>(u64 value)
     {
 #if SIZE_MAX >> 32
         usize n = 0;
@@ -190,9 +190,9 @@ namespace Swage::bits
         return static_cast<u8>(n);
 #else
         usize n = 0;
-        u32 lower = static_cast<u32>(v);
+        u32 lower = static_cast<u32>(value);
 
-        if (u32 upper = static_cast<u32>(v >> 32))
+        if (u32 upper = static_cast<u32>(value >> 32))
         {
             lower = upper;
             n = 32;
@@ -205,8 +205,8 @@ namespace Swage::bits
 #undef X
 
     template <typename T>
-    [[nodiscard]] inline u8 bsr_ceil(T v) noexcept
+    [[nodiscard]] inline u8 bsr_ceil(T value) noexcept
     {
-        return v ? (bsr<T>(v - 1) + 1) : 0;
+        return value ? (bsr<T>(value - 1) + 1) : 0;
     }
 } // namespace Swage::bits
