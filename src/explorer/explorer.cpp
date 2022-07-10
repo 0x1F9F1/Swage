@@ -19,6 +19,7 @@
 #include "games/bohemia/pbo.h"
 
 #include "games/rage/rpf0.h"
+#include "games/rage/rpf2.h"
 #include "games/rage/rpf7.h"
 #include "games/rage/rpf8.h"
 #include "games/rage/rsc.h"
@@ -44,6 +45,7 @@ Rc<FileDevice> LoadArchive(StringView name, Rc<Stream> handle)
         switch (magic)
         {
             case 0x30465052: return Rage::LoadRPF0(std::move(handle));
+            case 0x32465052: return Rage::LoadRPF2(std::move(handle));
 
             case 0x52504637:
             case 0x37465052: return Rage::LoadRPF7(std::move(handle), name);

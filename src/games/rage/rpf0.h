@@ -9,12 +9,6 @@ namespace Swage::Rage
         u32 Magic;
         u32 HeaderSize;
         u32 EntryCount;
-
-        // u32 dwordC;
-        // u32 HeaderDecryptionTag;
-
-        // Used in game.rpf for GTA IV to signal all file should be decrypted immediately (requires/assumes the whole RPF is preloaded into memory)
-        // u32 BodyDecryptionTag;
     };
 
     struct fiPackEntry0

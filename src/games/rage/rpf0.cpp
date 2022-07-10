@@ -42,7 +42,7 @@ namespace Swage::Rage
 
                 AddFile(vfs, path,
                     (size != disk_size) ? ArchiveFile::Deflated(offset, size, disk_size, -15)
-                                        : ArchiveFile::Stored(offset, size));
+                                        : ArchiveFile::Stored(offset, disk_size));
             }
 
             path.resize(old_size);
