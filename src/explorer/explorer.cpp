@@ -20,6 +20,7 @@
 
 #include "games/rage/rpf0.h"
 #include "games/rage/rpf2.h"
+#include "games/rage/rpf3.h"
 #include "games/rage/rpf7.h"
 #include "games/rage/rpf8.h"
 #include "games/rage/rsc.h"
