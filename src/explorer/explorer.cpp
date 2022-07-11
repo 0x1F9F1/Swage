@@ -151,7 +151,7 @@ bool ExtractFile(
 
         if (PathCompareEqual(g_ExtractPath, "/dev/null"))
         {
-            output = MakeRc<NullStream>();
+            output = swref NullStream();
         }
         else
         {
@@ -385,7 +385,7 @@ static int explorer_glob(lua_State* L)
 
     auto& [device, directory, _] = g_Devices.back();
 
-    Ptr<FileEnumerator> find = MakeUnique<FileGlobber>(device, directory, String(filter));
+    Ptr<FileEnumerator> find = swnew FileGlobber(device, directory, String(filter));
 
     FolderEntry entry;
 
@@ -520,7 +520,7 @@ void ShowWindow()
         g_CurrentFolders = 0;
 
         if (Ptr<FileEnumerator> find = !g_CurrentFilter.empty()
-                ? MakeUnique<FileGlobber>(g_CurrentDevice, String(dirname), g_CurrentFilter)
+                ? swnew FileGlobber(g_CurrentDevice, String(dirname), g_CurrentFilter)
                 : g_CurrentDevice->Enumerate(dirname))
         {
             FolderEntry entry;
@@ -914,7 +914,7 @@ private:
 
 Ptr<Application> Swage::CreateApplication()
 {
-    return MakeUnique<ArchiveExplorerApplication>();
+    return swnew ArchiveExplorerApplication();
 }
 
 const char* Swage::GetApplicationName()
@@ -934,7 +934,7 @@ i32 ArchiveExplorerApplication::Init()
         g_CurrentScriptName = config["lastscript"].as<String>("");
     }
 
-    AssetManager::Mount("", true, LoadZip(MakeRc<ResourceStream>(nullptr, IDR_RESOURCES_ZIP, "ZIP")));
+    AssetManager::Mount("", true, LoadZip(swref ResourceStream(nullptr, IDR_RESOURCES_ZIP, "ZIP")));
 
     if (Rc<Stream> s = AssetManager::Open("user:/secrets.bin"))
         Secrets.Load(*s);

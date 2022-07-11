@@ -175,8 +175,8 @@ namespace Swage::Rage
         if (!root.IsDirectory())
             throw std::runtime_error("Root entry is not a directory");
 
-        Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-        Rc<fiPackfile2> fops = MakeRc<fiPackfile2>(std::move(input), header);
+        Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+        Rc<fiPackfile2> fops = swref fiPackfile2(std::move(input), header);
 
         String path;
         fops->AddToVFS(device->Files, entries, names, path, root);

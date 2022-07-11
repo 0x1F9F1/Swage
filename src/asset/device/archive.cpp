@@ -14,16 +14,15 @@ namespace Swage
 {
     ArchiveFile ArchiveFile::Deflated(u64 offset, u64 size, u64 raw_size, i32 window_bits)
     {
-        return ArchiveFile(
-            offset, size, raw_size, [window_bits] { return MakeUnique<DeflateDecompressor>(window_bits); });
+        return ArchiveFile(offset, size, raw_size, [window_bits] { return swnew DeflateDecompressor(window_bits); });
     }
 
     Rc<Stream> ArchiveFile::Open(Rc<Stream> input) const
     {
-        Rc<Stream> result = MakeRc<PartialStream>(Offset, RawSize, std::move(input));
+        Rc<Stream> result = swref PartialStream(Offset, RawSize, std::move(input));
 
         if (Transform)
-            result = MakeRc<DecodeStream>(std::move(result), Transform(), Size);
+            result = swref DecodeStream(std::move(result), Transform(), Size);
 
         return result;
     }

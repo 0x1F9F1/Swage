@@ -288,7 +288,7 @@ namespace Swage
         if (handle == INVALID_HANDLE_VALUE)
             return nullptr;
 
-        return MakeUnique<Win32FileStream>(handle);
+        return swref Win32FileStream(handle);
     }
 
     static inline bool Win32FolderCreateRaw(const wchar_t* path)
@@ -383,7 +383,7 @@ namespace Swage
     Ptr<FileEnumerator> Win32FileFind(StringView path)
     {
         if (path.empty())
-            return MakeUnique<Win32VolumeEnumerator>();
+            return swnew Win32VolumeEnumerator();
 
         wchar_t wpath[MaxPathLength + 2];
 
@@ -398,7 +398,7 @@ namespace Swage
         wpath[converted++] = L'*';
         wpath[converted++] = L'\0';
 
-        return MakeUnique<Win32FileEnumerator>(wpath);
+        return swnew Win32FileEnumerator(wpath);
     }
 
     static usize Win32GetKnownFolderPathRaw(REFKNOWNFOLDERID rfid, char* buffer, usize buffer_len)
@@ -675,7 +675,7 @@ namespace Swage
         if (hProc == NULL)
             return nullptr;
 
-        return MakeRc<Win32ProcStream>(hProc);
+        return swref Win32ProcStream(hProc);
     }
 
 } // namespace Swage

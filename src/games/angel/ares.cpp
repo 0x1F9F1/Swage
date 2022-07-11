@@ -89,8 +89,8 @@ namespace Swage::Angel
         if (!input->TryRead(names.data(), ByteSize(names)))
             throw std::runtime_error("Failed to read names");
 
-        Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-        Rc<AresArchive> fops = MakeRc<AresArchive>(std::move(input));
+        Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+        Rc<AresArchive> fops = swref AresArchive(std::move(input));
 
         String path;
 

@@ -38,10 +38,10 @@ namespace Swage::Bohemia
     {
         PboEntry& data = GetData(file);
 
-        Rc<Stream> result = MakeRc<PartialStream>(DataOffset + data.Offset, data.RawSize, Input);
+        Rc<Stream> result = swref PartialStream(DataOffset + data.Offset, data.RawSize, Input);
 
         if (data.PackingMethod == 0x43707273)
-            result = MakeRc<DecodeStream>(std::move(result), MakeUnique<LzssDecompressor>(), data.Size);
+            result = swref DecodeStream(std::move(result), swnew LzssDecompressor(), data.Size);
 
         return result;
     }
@@ -93,8 +93,8 @@ namespace Swage::Bohemia
         BufferedStream stream(input);
         stream.Rewind();
 
-        Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-        Rc<PboArchive> fops = MakeRc<PboArchive>(std::move(input));
+        Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+        Rc<PboArchive> fops = swref PboArchive(std::move(input));
 
         String name;
         name.reserve(128);

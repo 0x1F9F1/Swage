@@ -401,7 +401,7 @@ namespace Swage
 
         constexpr usize FilterRadix = sizeof(FilterWord) * CHAR_BIT;
         usize filter_size = usize(1) << FilterBits;
-        Filter = MakeUnique<FilterWord[]>(1 + ((filter_size - 1) / FilterRadix));
+        Filter.reset(new FilterWord[1 + ((filter_size - 1) / FilterRadix)] {});
 
         u8 filter_shift = 32 - FilterBits;
 

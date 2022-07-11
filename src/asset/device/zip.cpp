@@ -262,8 +262,8 @@ namespace Swage
         if (!stream.TrySeek(cd_offset))
             throw std::runtime_error("Failed to seek to central directory");
 
-        Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-        Rc<ZipArchive> fops = MakeRc<ZipArchive>(std::move(input));
+        Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+        Rc<ZipArchive> fops = swref ZipArchive(std::move(input));
 
         String name;
 

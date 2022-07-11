@@ -23,7 +23,7 @@ namespace Swage
         if (handle == nullptr)
             return nullptr;
 
-        return MakeRc<StdFileStream>(handle);
+        return swref StdFileStream(handle);
     }
 
     Rc<StdFileStream> StdFileStream::Create(const char* path, bool write_only, bool truncate)
@@ -36,7 +36,7 @@ namespace Swage
         if (handle == nullptr)
             return nullptr;
 
-        return MakeRc<StdFileStream>(handle);
+        return swref StdFileStream(handle);
     }
 
     Rc<StdFileStream> StdFileStream::TempFile()
@@ -46,7 +46,7 @@ namespace Swage
         if (!handle)
             return nullptr;
 
-        return MakeRc<StdFileStream>(handle);
+        return swref StdFileStream(handle);
     }
 
     i64 StdFileStream::Seek(i64 offset, SeekWhence whence)

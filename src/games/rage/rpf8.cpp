@@ -341,7 +341,7 @@ namespace Swage::Rage::RPF8
                 throw std::runtime_error("RDR2 PC keys not loaded");
 
             if (auto iter = RDR2_PC_KEYS.find(tag); iter != RDR2_PC_KEYS.end())
-                return MakeUnique<Tfit2CbcCipher>(&iter->second, RDR2_PC_IV, &RDR2_PC_CONTEXT);
+                return swnew Tfit2CbcCipher(&iter->second, RDR2_PC_IV, &RDR2_PC_CONTEXT);
         }
         else if (platform == 'a')
         {
@@ -356,8 +356,7 @@ namespace Swage::Rage::RPF8
                     return None;
             }
 
-            return MakeUnique<TfitCbcCipher>(
-                RDR2_ANDROID_TFIT_KEYS[tag] + 1, RDR2_ANDROID_TFIT_TABLES, RDR2_ANDROID_IV);
+            return swnew TfitCbcCipher(RDR2_ANDROID_TFIT_KEYS[tag] + 1, RDR2_ANDROID_TFIT_TABLES, RDR2_ANDROID_IV);
         }
         else if (platform == 'o')
         {
@@ -372,7 +371,7 @@ namespace Swage::Rage::RPF8
                     return None;
             }
 
-            return MakeUnique<TfitCbcCipher>(RDR2_PS4_TFIT_KEYS[tag] + 1, RDR2_PS4_TFIT_TABLES, RDR2_PS4_IV);
+            return swnew TfitCbcCipher(RDR2_PS4_TFIT_KEYS[tag] + 1, RDR2_PS4_TFIT_TABLES, RDR2_PS4_IV);
         }
 
         return None;
@@ -637,7 +636,7 @@ namespace Swage::Rage
             raw_size -= 16;
         }
 
-        Rc<Stream> result = MakeRc<PartialStream>(offset, is_compressed ? raw_size : size, Input);
+        Rc<Stream> result = swref PartialStream(offset, is_compressed ? raw_size : size, Input);
 
         if (Option<Ptr<Cipher>> cipher = RPF8::MakeCipher(Header.PlatformId, entry.GetEncryptionKeyId()))
         {
@@ -651,9 +650,8 @@ namespace Swage::Rage
                     : (is_compressed ? 0x2000 : 0x1000);
 
                 // FIXME: EcbCipherStream assumes the cipher has no IV
-                result = MakeRc<EcbCipherStream>(std::move(result),
-                    MakeUnique<RPF8::StridedCipher>(
-                        entry.GetEncryptionConfig(), raw_size, std::move(*cipher), chunk_size));
+                result = swref EcbCipherStream(std::move(result),
+                    swnew RPF8::StridedCipher(entry.GetEncryptionConfig(), raw_size, std::move(*cipher), chunk_size));
             }
         }
         else
@@ -665,11 +663,11 @@ namespace Swage::Rage
         switch (entry.GetCompressorId())
         {
             case 1: // Deflate
-                result = MakeRc<DecodeStream>(std::move(result), MakeUnique<DeflateDecompressor>(-15), size);
+                result = swref DecodeStream(std::move(result), swnew DeflateDecompressor(-15), size);
                 break;
 
             case 2: // Oodle
-                result = MakeRc<DecodeStream>(std::move(result), MakeUnique<OodleDecompressor>(size), size);
+                result = swref DecodeStream(std::move(result), swnew OodleDecompressor(size), size);
                 break;
         }
 
@@ -755,8 +753,8 @@ namespace Swage::Rage
         }
 #endif
 
-        Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-        Rc<fiPackfile8> fops = MakeRc<fiPackfile8>(std::move(input), header);
+        Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+        Rc<fiPackfile8> fops = swref fiPackfile8(std::move(input), header);
 
         for (const fiPackEntry8& entry : entries)
         {

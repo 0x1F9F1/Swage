@@ -255,8 +255,8 @@ namespace Swage::Bohemia
                 {
                     // A VFS tree
 
-                    Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-                    Rc<PakArchive> fops = MakeRc<PakArchive>(input);
+                    Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+                    Rc<PakArchive> fops = swref PakArchive(input);
 
                     String path;
                     fops->AddToVFS(device->Files, stream, pack_header, path, 1);

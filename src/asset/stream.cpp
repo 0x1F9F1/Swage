@@ -132,7 +132,7 @@ namespace Swage
         i64 total = 0;
 
         usize buffer_len = static_cast<usize>(std::clamp<i64>(DistToEnd(), 4 * 1024, 64 * 1024));
-        Ptr<u8[]> buffer = MakeUniqueUninit<u8[]>(buffer_len);
+        Ptr<u8[]> buffer(new u8[buffer_len]);
 
         while (true)
         {
@@ -167,7 +167,7 @@ namespace Swage
         if (stream->IsSynchronized())
             return stream;
 
-        return MakeRc<SyncStream>(stream);
+        return swref SyncStream(stream);
     }
 
     usize Stream::SafeRead(void* ptr, usize len)

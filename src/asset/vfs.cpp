@@ -504,7 +504,7 @@ namespace Swage
     Ptr<FileEnumerator> VFS::Enumerate(StringView path)
     {
         if (Node* folder = GetFolder(path))
-            return MakeUnique<Enumerator>(folder->FolderData);
+            return swnew Enumerator(folder->FolderData);
 
         return nullptr;
     }

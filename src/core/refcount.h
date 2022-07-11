@@ -80,7 +80,7 @@ namespace Swage
         {}
 
         template <typename U, typename = std::enable_if_t<std::is_convertible_v<U*, T*>>>
-        SW_FORCEINLINE Rc(Ptr<U> ptr) noexcept
+        SW_FORCEINLINE explicit Rc(Ptr<U>&& ptr) noexcept
             : ptr_(ptr.release())
         {}
 
@@ -214,21 +214,17 @@ namespace Swage
         friend class Rc;
     };
 
-    template <typename T, typename... Args>
-    [[nodiscard]] SW_FORCEINLINE std::enable_if_t<!std::is_array_v<T>, Rc<T>> MakeRc(Args&&... args)
+    struct RcMaker
     {
-        return Rc<T>(new T(std::forward<Args>(args)...));
-    }
-
-    template <typename T>
-    [[nodiscard]] SW_FORCEINLINE std::enable_if_t<!std::is_array_v<T>, Rc<T>> AddRc(T* ptr) noexcept
-    {
-        if (ptr)
-            ptr->AddRef();
-
-        return Rc<T>(ptr);
-    }
+        template <typename T>
+        SW_FORCEINLINE Rc<T> operator->*(T* ptr) const noexcept
+        {
+            return Rc<T>(ptr);
+        }
+    };
 
     template <typename T>
     Rc(T*) -> Rc<T>;
 } // namespace Swage
+
+#define swref ::Swage::RcMaker {}->*new

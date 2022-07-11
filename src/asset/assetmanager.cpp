@@ -29,10 +29,10 @@ namespace Swage
         SwLogInfo("Base Path: {}", s_BasePath);
         SwLogInfo("Pref Path: {}", s_PrefPath);
 
-        s_RootDevice = MakeRc<RootFileDevice>();
+        s_RootDevice = swref RootFileDevice();
 
         const auto mount_local = [](StringView prefix, bool read_only, StringView path) {
-            Mount(String(prefix), read_only, MakeUnique<RelativeFileDevice>(String(path), LocalFiles()));
+            Mount(String(prefix), read_only, swref RelativeFileDevice(String(path), LocalFiles()));
         };
 
 #if defined(SWAGE_ASSET_DIR) && !defined(SWAGE_RELEASE)

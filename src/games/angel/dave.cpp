@@ -104,8 +104,8 @@ namespace Swage::Angel
         if (!input->TryReadBulk(names.data(), ByteSize(names), TOC_OFFSET + header.NamesOffset))
             throw std::runtime_error("Failed to read names");
 
-        Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-        Rc<DaveArchive> fops = MakeRc<DaveArchive>(std::move(input));
+        Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+        Rc<DaveArchive> fops = swref DaveArchive(std::move(input));
 
         String name;
         bool packed_names = header.Magic == 0x65766144;

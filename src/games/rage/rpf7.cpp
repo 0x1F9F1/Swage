@@ -122,7 +122,7 @@ namespace Swage::Rage::RPF7
 
                 SwAssert(key < 101);
 
-                return MakeUnique<TfitEcbCipher>(GTA5_PC_TFIT_KEYS[key] + 1, GTA5_PC_TFIT_TABLES);
+                return swnew TfitEcbCipher(GTA5_PC_TFIT_KEYS[key] + 1, GTA5_PC_TFIT_TABLES);
             }
 
             case 0xFFEFFFF: {
@@ -131,14 +131,14 @@ namespace Swage::Rage::RPF7
 
                 SwAssert(key < 101);
 
-                return MakeUnique<AesEcbCipher>(GTA5_PS4_AES_KEYS[key], 32, true);
+                return swnew AesEcbCipher(GTA5_PS4_AES_KEYS[key], 32, true);
             }
 
             case 0xFFFFFF8: {
                 if (!GTA5_PS3_KEY_LOADED)
                     throw std::runtime_error("GTA5 PS3 key not loaded");
 
-                return MakeUnique<AesEcbCipher>(GTA5_PS3_AES_KEY, 32, true);
+                return swnew AesEcbCipher(GTA5_PS3_AES_KEY, 32, true);
             }
 
             case 0xFFFFFF7: {
@@ -147,14 +147,14 @@ namespace Swage::Rage::RPF7
                     if (!GTA5_360_KEY_LOADED)
                         throw std::runtime_error("GTA5 360 key not loaded");
 
-                    return MakeUnique<AesEcbCipher>(GTA5_360_AES_KEY, 32, true);
+                    return swnew AesEcbCipher(GTA5_360_AES_KEY, 32, true);
                 }
                 else
                 {
                     if (!LAUNCHER_KEY_LOADED)
                         throw std::runtime_error("Launcher key not loaded");
 
-                    return MakeUnique<AesEcbCipher>(LAUNCHER_AES_KEY, 32, true);
+                    return swnew AesEcbCipher(LAUNCHER_AES_KEY, 32, true);
                 }
             }
 
@@ -162,7 +162,7 @@ namespace Swage::Rage::RPF7
                 if (!RAGE_KEY_LOADED)
                     throw std::runtime_error("Rage default key not loaded");
 
-                return MakeUnique<AesEcbCipher>(RAGE_AES_KEY, 32, true);
+                return swnew AesEcbCipher(RAGE_AES_KEY, 32, true);
             }
         }
 
@@ -298,7 +298,7 @@ namespace Swage::Rage
             if (entry.IsResource() || entry.GetDecryptionTag())
                 throw std::runtime_error("Invalid raw resource");
 
-            return MakeRc<PartialStream>(offset, size, Input);
+            return swref PartialStream(offset, size, Input);
         }
 
         StringView name = GetEntryName(entry);
@@ -336,16 +336,16 @@ namespace Swage::Rage
                 key_index = size;
         }
 
-        Rc<Stream> result = MakeRc<PartialStream>(offset, raw_size, Input);
+        Rc<Stream> result = swref PartialStream(offset, raw_size, Input);
 
         if (key_index != -1)
-            result = MakeRc<EcbCipherStream>(
-                std::move(result), RPF7::MakeCipher(Header, CalculateKeyIndex(name, key_index)));
+            result =
+                swref EcbCipherStream(std::move(result), RPF7::MakeCipher(Header, CalculateKeyIndex(name, key_index)));
 
         if (Header.GetPlatformBit())
-            result = MakeRc<DecodeStream>(std::move(result), MakeUnique<LzxdDecompressor>(), size);
+            result = swref DecodeStream(std::move(result), swnew LzxdDecompressor(), size);
         else
-            result = MakeRc<DecodeStream>(std::move(result), MakeUnique<DeflateDecompressor>(-15), size);
+            result = swref DecodeStream(std::move(result), swnew DeflateDecompressor(-15), size);
 
         return result;
     }
@@ -468,8 +468,8 @@ namespace Swage::Rage
         if (!entries[0].IsDirectory())
             throw std::runtime_error("Root entry is not a directory");
 
-        Rc<VirtualFileDevice> device = MakeRc<VirtualFileDevice>();
-        Rc<fiPackfile7> fops = MakeRc<fiPackfile7>(std::move(input), header, std::move(names));
+        Rc<VirtualFileDevice> device = swref VirtualFileDevice();
+        Rc<fiPackfile7> fops = swref fiPackfile7(std::move(input), header, std::move(names));
 
         String path;
         fops->AddToVFS(device->Files, entries, path, 0);

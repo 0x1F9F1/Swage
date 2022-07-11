@@ -21,7 +21,7 @@ namespace Swage
         if (ops == nullptr)
             return nullptr;
 
-        return MakeRc<RWopsStream>(ops);
+        return swref RWopsStream(ops);
     }
 
     Rc<RWopsStream> RWopsStream::Create(const char* path, bool write_only, bool truncate)
@@ -34,7 +34,7 @@ namespace Swage
         if (ops == nullptr)
             return nullptr;
 
-        return MakeRc<RWopsStream>(ops);
+        return swref RWopsStream(ops);
     }
 
     i64 RWopsStream::Seek(i64 offset, SeekWhence whence)
