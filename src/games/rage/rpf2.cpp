@@ -11,8 +11,9 @@ namespace Swage::Rage
     static_assert(is_c_struct_v<fiPackHeader2, 0x18>);
     static_assert(is_c_struct_v<fiPackEntry2, 0x10>);
 
-    static const char* GTA4_PC_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
+    static const char* DEFAULT_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
     static const char* MCLA_360_KEY_HASH = "AOHXW606r+x;@QZ+A|cr";
+    static const char* MP3_PC_KEY_HASH = "AOHXWm;adx2E-Xdw{0pB";
 
     class fiPackfile2 final : public FileOperationsT<fiPackEntry2>
     {
@@ -38,8 +39,11 @@ namespace Swage::Rage
 
         u32 size = entry.GetSize();
         u32 disk_size = entry.GetOnDiskSize();
-        u32 offset = entry.GetOffset();
+        u64 offset = entry.GetOffset();
         i32 comp_type = 0;
+
+        if (Header.Magic == 0x34465052)
+            offset <<= 3;
 
         if (entry.IsResource())
         {
@@ -113,7 +117,7 @@ namespace Swage::Rage
         if (!input->TryReadBulk(&header, sizeof(header), 0))
             throw std::runtime_error("Failed to read header");
 
-        if (header.Magic != 0x32465052 && header.Magic != 0x33465052)
+        if (header.Magic != 0x32465052 && header.Magic != 0x33465052 && header.Magic != 0x34465052)
             throw std::runtime_error("Invalid header magic");
 
         usize entries_size = header.EntryCount * sizeof(fiPackEntry2);
@@ -135,7 +139,11 @@ namespace Swage::Rage
         {
             bool found = false;
 
-            for (const char* key_hash : {GTA4_PC_KEY_HASH, MCLA_360_KEY_HASH})
+            for (const char* key_hash : {
+                     DEFAULT_KEY_HASH,  // 0xFFFFFFFF
+                     MCLA_360_KEY_HASH, // 0xFFFFFFFF
+                     MP3_PC_KEY_HASH,   // 0xFFFFFFFC
+                 })
             {
                 u8 key[32];
 
