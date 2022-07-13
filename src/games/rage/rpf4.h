@@ -4,6 +4,7 @@
 
 namespace Swage::Rage
 {
+    // Same as RPF2, but with larger offsets
     using fiPackHeader4 = fiPackHeader2;
     using fiPackEntry4 = fiPackEntry2;
 

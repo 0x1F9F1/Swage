@@ -4,6 +4,7 @@
 
 namespace Swage::Rage
 {
+    // Same as RPF2, but with hashed names
     using fiPackHeader3 = fiPackHeader2;
     using fiPackEntry3 = fiPackEntry2;
 
