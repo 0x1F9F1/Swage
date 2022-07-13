@@ -38,7 +38,7 @@ namespace Swage::Rage
         const fiPackEntry2& entry = GetData(file);
 
         u32 size = entry.GetSize();
-        u32 disk_size = entry.GetOnDiskSize();
+        u32 raw_size = entry.GetOnDiskSize();
         u64 offset = entry.GetOffset();
         i32 comp_type = 0;
 
@@ -47,12 +47,13 @@ namespace Swage::Rage
 
         if (entry.IsResource())
         {
-            if (disk_size < 0xC)
+            if (raw_size < 0xC)
                 throw std::runtime_error("Resource raw size is too small");
 
             offset += 0xC;
-            disk_size -= 0xC;
+            raw_size -= 0xC;
 
+            // TODO: Handle LZXD compression
             if (entry.IsCompressed())
                 comp_type = 15;
         }
@@ -63,10 +64,9 @@ namespace Swage::Rage
         }
 
         // TODO: Handle Header.FileDecryptionTag
-        // TODO: Handle LZX compression
 
-        ArchiveFile result = comp_type ? ArchiveFile::Deflated(offset, size, disk_size, comp_type)
-                                       : ArchiveFile::Stored(offset, disk_size);
+        ArchiveFile result = comp_type ? ArchiveFile::Deflated(offset, size, raw_size, comp_type)
+                                       : ArchiveFile::Stored(offset, raw_size);
 
         return result.Open(Input);
     }

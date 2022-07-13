@@ -13,7 +13,7 @@ namespace Swage::Rage
         u32 dwordC;
         u32 HeaderDecryptionTag;
 
-        // Used in game.rpf for GTA IV to signal all file should be decrypted immediately (requires/assumes the whole RPF is preloaded into memory)
+        // Used in game.rpf for GTA IV to signal all file should be decrypted immediately
         u32 FileDecryptionTag;
     };
 
@@ -22,7 +22,8 @@ namespace Swage::Rage
         // NameOffset/NameHash
         u32 dword0;
 
-        // OnDiskSize
+        // OnDiskSize (Resource)
+        // Size (Binary)
         u32 dword4;
 
         // ResourceVersion:8 (Resource)
@@ -32,7 +33,7 @@ namespace Swage::Rage
         // IsDirectory:1
         u32 dword8;
 
-        // Size:30 (Binary)
+        // OnDiskSize:30 (Binary)
         // EntryCount:30 (Directory)
         // ResourceFlags:30 (Resource)
         // IsCompressed:1
@@ -49,14 +50,31 @@ namespace Swage::Rage
             return dword0;
         }
 
-        u32 GetOnDiskSize() const
+        u32 GetSize() const
         {
-            return dword4;
+            if (IsResource())
+            {
+                u32 virt_size = GetVirtualSize();
+                u32 phys_size = GetPhysicalSize();
+
+                return virt_size + phys_size;
+            }
+            else
+            {
+                return dword4;
+            }
         }
 
         u32 GetOffset() const
         {
-            return IsResource() ? (dword8 & 0x7FFFFF00) : (dword8 & 0x7FFFFFFF);
+            if (IsResource())
+            {
+                return dword8 & 0x7FFFFF00;
+            }
+            else
+            {
+                return dword8 & 0x7FFFFFFF;
+            }
         }
 
         u32 GetEntryIndex() const
@@ -74,12 +92,16 @@ namespace Swage::Rage
             return static_cast<u8>(dword8 & 0xFF);
         }
 
-        u32 GetSize() const
+        u32 GetOnDiskSize() const
         {
             if (IsResource())
-                return GetVirtualSize() + GetPhysicalSize();
-
-            return dwordC & 0x3FFFFFFF;
+            {
+                return dword4;
+            }
+            else
+            {
+                return dwordC & 0x3FFFFFFF;
+            }
         }
 
         u32 GetEntryCount() const
@@ -99,9 +121,6 @@ namespace Swage::Rage
 
         bool IsCompressed() const
         {
-            // if (IsResource())
-            //     return false;
-
             return dwordC & 0x40000000;
         }
 
