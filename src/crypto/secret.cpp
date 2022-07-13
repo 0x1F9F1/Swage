@@ -341,8 +341,11 @@ namespace Swage
         SecretId result;
         usize decoded = b85decode(text.data(), text.size(), &result, sizeof(result));
 
-        SwAssert(decoded == sizeof(result));
-        SwAssert(result.Length != 0);
+        if (decoded != sizeof(result))
+            throw std::runtime_error("Failed to decode secret");
+
+        if (result.Length == 0)
+            throw std::runtime_error("Invalid secret length");
 
         return result;
     }

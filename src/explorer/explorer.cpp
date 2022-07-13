@@ -497,7 +497,9 @@ static int PathInputCallback(ImGuiInputTextCallbackData* data)
     return 0;
 };
 
-void ShowWindow()
+void ShowKeyFinder();
+
+void ShowMainWindow()
 {
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
@@ -710,7 +712,23 @@ void ShowWindow()
         ImGui::SameLine();
 
         if (ImGui::Button("Find Keys"))
-            SearchForKeys();
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                ImGui::OpenPopup("Key Finder");
+            }
+            else
+            {
+                SearchForKeys();
+            }
+        }
+
+        if (ImGui::BeginPopup("Key Finder"))
+        {
+            ShowKeyFinder();
+
+            ImGui::EndPopup();
+        }
 
         ImGui::EndPopup();
     }
@@ -749,6 +767,58 @@ void ShowWindow()
         {
             SwLogInfo("Script {} not found", g_CurrentScriptName);
         }
+    }
+}
+
+void ShowKeyFinder()
+{
+    static std::string target_hash;
+    ImGui::InputText("Hash", &target_hash);
+
+    try
+    {
+        SecretId secret = SecretId::From85(target_hash);
+
+        ImGui::Text("0x%X bytes, CRC=0x%016llX", secret.Length, secret.Crc);
+
+        static int target_pid = 0;
+        ImGui::InputInt("PID", &target_pid);
+
+        Rc<Stream> search_target;
+
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            if (!(search_target = Win32ProcOpenStream(target_pid)))
+                SwLogError("Couldn't open PID {}", target_pid);
+        }
+
+        static std::string target_file;
+        ImGui::InputText("File", &target_file);
+
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            if (!(search_target = Win32FileOpen(target_file, true)))
+                SwLogError("Couldn't open file {}", target_pid);
+        }
+
+        if (search_target)
+        {
+            SecretFinder finder;
+            finder.Add(secret);
+
+            auto found = finder.Search(*search_target);
+
+            SwLogInfo("{} {}", found.empty() ? "Couldn't find" : "Found", target_hash);
+
+            Secrets.Add(found);
+
+            if (Rc<Stream> s = AssetManager::Create("user:/secrets.bin"))
+                Secrets.Save(*s);
+        }
+    }
+    catch (const std::exception&)
+    {
+        ImGui::Text("Invalid hash");
     }
 }
 
@@ -1019,7 +1089,7 @@ bool ArchiveExplorerApplication::Update()
     if (running)
     {
         Gui::BeginFrame();
-        ShowWindow();
+        ShowMainWindow();
         Gui::EndFrame();
     }
 
