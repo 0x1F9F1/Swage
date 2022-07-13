@@ -343,7 +343,7 @@ namespace Swage::Rage
                 swref EcbCipherStream(std::move(result), RPF7::MakeCipher(Header, CalculateKeyIndex(name, key_index)));
 
         if (Header.GetPlatformBit())
-            result = swref DecodeStream(std::move(result), swnew LzxdDecompressor(), size);
+            result = swref DecodeStream(std::move(result), swnew LzxdDecompressor(64 * 1024, 256 * 1024), size);
         else
             result = swref DecodeStream(std::move(result), swnew DeflateDecompressor(-15), size);
 

@@ -7,7 +7,7 @@ namespace Swage
     class LzxdDecompressor : public BinaryTransform
     {
     public:
-        LzxdDecompressor();
+        LzxdDecompressor(u32 window_size, u32 partition_size);
         ~LzxdDecompressor() override;
 
         bool Reset();

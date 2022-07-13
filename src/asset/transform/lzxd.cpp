@@ -67,7 +67,7 @@ namespace Swage
         return is_loaded;
     }
 
-    LzxdDecompressor::LzxdDecompressor()
+    LzxdDecompressor::LzxdDecompressor(u32 window_size, u32 partition_size)
     {
         if (!LoadXCompress())
             throw std::runtime_error("Failed to load XCompress");
@@ -75,8 +75,8 @@ namespace Swage
         XMEMCODEC_PARAMETERS_LZX codec_params {};
 
         codec_params.Flags = 0;
-        codec_params.WindowSize = 64 * 1024;
-        codec_params.CompressionPartitionSize = 256 * 1024;
+        codec_params.WindowSize = window_size;
+        codec_params.CompressionPartitionSize = partition_size;
 
         usize length = XCompress.GetDecompressionContextSize(XMEMCODEC_LZX, &codec_params, XMEMCOMPRESS_STREAM);
 

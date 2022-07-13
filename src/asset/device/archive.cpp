@@ -8,7 +8,6 @@
 #include "../stream/partial.h"
 
 #include "../transform/deflate.h"
-#include "../transform/lzss.h"
 
 namespace Swage
 {
