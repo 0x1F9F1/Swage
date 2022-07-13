@@ -22,6 +22,7 @@
 #include "games/rage/rpf2.h"
 #include "games/rage/rpf3.h"
 #include "games/rage/rpf4.h"
+#include "games/rage/rpf6.h"
 #include "games/rage/rpf7.h"
 #include "games/rage/rpf8.h"
 #include "games/rage/rsc.h"
@@ -51,6 +52,7 @@ Rc<FileDevice> LoadArchive(StringView name, Rc<Stream> handle)
             case 0x32465052: return Rage::LoadRPF2(std::move(handle));
             case 0x33465052: return Rage::LoadRPF3(std::move(handle));
             case 0x34465052: return Rage::LoadRPF4(std::move(handle));
+            case 0x36465052: return Rage::LoadRPF6(std::move(handle));
 
             case 0x52504637:
             case 0x37465052: return Rage::LoadRPF7(std::move(handle), name);

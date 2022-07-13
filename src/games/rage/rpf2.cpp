@@ -174,7 +174,10 @@ namespace Swage::Rage
             }
 
             if (!found)
-                throw std::runtime_error("Missing/Unknown header encryption");
+            {
+                throw std::runtime_error(
+                    fmt::format("Unknown header encryption 0x{:08x} (or missing key)", header.HeaderDecryptionTag));
+            }
         }
 
         // rage::fiPackfile::FindEntry assumes the first entry is a directory (and ignores its name)

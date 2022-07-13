@@ -4,22 +4,17 @@
 
 namespace Swage::Rage
 {
-    struct fiPackHeader2
+    struct fiPackHeader6
     {
         u32 Magic;
-        u32 HeaderSize;
         u32 EntryCount;
-
-        u32 dwordC;
-        u32 HeaderDecryptionTag;
-
-        // Used in game.rpf for GTA IV to signal all file should be decrypted immediately (requires/assumes the whole RPF is preloaded into memory)
-        u32 FileDecryptionTag;
+        u32 NamesOffset;
+        u32 DecryptionTag;
     };
 
-    struct fiPackEntry2
+    struct fiPackEntry6
     {
-        // NameOffset/NameHash
+        // NameHash
         u32 dword0;
 
         // OnDiskSize
@@ -39,10 +34,11 @@ namespace Swage::Rage
         // IsResource:1
         u32 dwordC;
 
-        u32 GetNameOffset() const
-        {
-            return dword0;
-        }
+        // VirtualFlags:14 (Resource)
+        // PhysicalFlags:14 (Resource)
+        // MainChunkOffset:3 (Resource)
+        // HasResourceFlags:1 (Resource)
+        u32 dword10;
 
         u32 GetHash() const
         {
@@ -107,14 +103,42 @@ namespace Swage::Rage
 
         u32 GetVirtualSize() const
         {
-            return (dwordC & 0x7FF) << (((dwordC >> 11) & 0xF) + 8);
+            if (HasExtendedFlags())
+                return (dword10 & 0x3FFF) << 12;
+            else
+                return (dwordC & 0x7FF) << (((dwordC >> 11) & 0xF) + 8);
         }
 
         u32 GetPhysicalSize() const
         {
-            return ((dwordC >> 15) & 0x7FF) << (((dwordC >> 26) & 0xF) + 8);
+            if (HasExtendedFlags())
+                return ((dword10 >> 14) & 0x3FFF) << 12;
+            else
+                return ((dwordC >> 15) & 0x7FF) << (((dwordC >> 26) & 0xF) + 8);
+        }
+
+        bool HasExtendedFlags() const
+        {
+            return (dword10 & 0x80000000) == 0x80000000;
+        }
+
+        u32 GetMainChunkOffset() const
+        {
+            if (HasExtendedFlags())
+            {
+                u32 vsize = GetVirtualSize();
+                u32 main_chunk_size = 0x1000 << ((dword10 >> 28) & 0x7);
+
+                if (vsize > 0x80000)
+                    vsize = 0x80000;
+
+                if (main_chunk_size <= vsize)
+                    return vsize & ~u32((main_chunk_size << 1) - 1);
+            }
+
+            return 0;
         }
     };
 
-    Rc<VirtualFileDevice> LoadRPF2(Rc<Stream> input);
+    Rc<VirtualFileDevice> LoadRPF6(Rc<Stream> input);
 } // namespace Swage::Rage

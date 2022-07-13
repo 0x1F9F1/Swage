@@ -11,6 +11,9 @@ swage_add_component(SwRAGE
     rpf4.h
     rpf4.cpp
 
+    rpf6.h
+    rpf6.cpp
+
     rpf7.h
     rpf7.cpp
 
