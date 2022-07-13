@@ -75,7 +75,10 @@ namespace Swage::Rage
             if (IsResource())
                 return GetVirtualSize() + GetPhysicalSize();
 
-            return dwordC & 0x3FFFFFFF;
+            if (IsCompressed())
+                return dwordC & 0x3FFFFFFF;
+
+            return dword4;
         }
 
         u32 GetEntryCount() const
@@ -95,9 +98,6 @@ namespace Swage::Rage
 
         bool IsCompressed() const
         {
-            // if (IsResource())
-            //     return false;
-
             return dwordC & 0x40000000;
         }
 
