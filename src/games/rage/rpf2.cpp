@@ -122,7 +122,7 @@ namespace Swage::Rage
 
         usize entries_size = header.EntryCount * sizeof(fiPackEntry2);
 
-        if (header.HeaderSize <= entries_size)
+        if (header.HeaderSize < entries_size)
             throw std::runtime_error("Invalid header size");
 
         Vec<fiPackEntry2> entries(header.EntryCount);

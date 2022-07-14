@@ -39,8 +39,6 @@ namespace Swage::Rage
         u64 offset = entry.GetOffset();
         i32 comp_type = 0;
 
-        offset <<= 3;
-
         if (entry.IsResource())
         {
             u32 rsc_size = entry.HasExtendedFlags() ? 0x10 : 0xC;
@@ -82,6 +80,7 @@ namespace Swage::Rage
 
             const fiPackEntry6& entry = entries.at(i);
 
+            // TODO: Dehash names
             fmt::format_to(std::back_inserter(path), "${:08X}", entry.GetHash());
 
             if (entry.IsDirectory())
@@ -112,7 +111,7 @@ namespace Swage::Rage
         bits::bswapv(header.Magic, header.EntryCount, header.NamesOffset, header.DecryptionTag);
 
         // Decryption cannot be performed in-place as the size has to be aligned to 16 bytes.
-        usize entries_size = (header.EntryCount * sizeof(fiPackEntry6) + 0xF) & ~u32(0xF);
+        usize entries_size = (header.EntryCount * sizeof(fiPackEntry6) + 0xF) & ~usize(0xF);
         Ptr<u8[]> entries_data(new u8[entries_size]);
 
         if (!input->TryRead(entries_data.get(), entries_size))
@@ -145,7 +144,7 @@ namespace Swage::Rage
 
         Vec<fiPackEntry6> entries(header.EntryCount);
 
-        if (ByteSize(entries) > entries_size)
+        if (entries_size < ByteSize(entries))
             throw std::runtime_error("Invalid entry count");
 
         std::memcpy(entries.data(), entries_data.get(), ByteSize(entries));

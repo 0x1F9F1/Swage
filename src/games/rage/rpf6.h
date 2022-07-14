@@ -50,9 +50,9 @@ namespace Swage::Rage
             return dword4;
         }
 
-        u32 GetOffset() const
+        u64 GetOffset() const
         {
-            return IsResource() ? (dword8 & 0x7FFFFF00) : (dword8 & 0x7FFFFFFF);
+            return static_cast<u64>(IsResource() ? (dword8 & 0x7FFFFF00) : (dword8 & 0x7FFFFFFF)) << 3;
         }
 
         u32 GetEntryIndex() const
