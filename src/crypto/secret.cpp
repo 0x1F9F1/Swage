@@ -1,5 +1,6 @@
 #include "secret.h"
 
+#include "asset/assetmanager.h"
 #include "asset/stream.h"
 #include "core/bits.h"
 #include "crc.h"
@@ -336,16 +337,16 @@ namespace Swage
         return String(buffer, encoded);
     }
 
-    SecretId SecretId::From85(StringView text)
+    Option<SecretId> SecretId::From85(StringView text)
     {
         SecretId result;
         usize decoded = b85decode(text.data(), text.size(), &result, sizeof(result));
 
         if (decoded != sizeof(result))
-            throw std::runtime_error("Failed to decode secret");
+            return None;
 
         if (result.Length == 0)
-            throw std::runtime_error("Invalid secret length");
+            return None;
 
         return result;
     }
@@ -616,7 +617,7 @@ namespace Swage
 
     void SecretFinder::Add(const char* id)
     {
-        Add(SecretId::From85(id));
+        Add(SecretId::From85(id).value());
     }
 
     HashMap<SecretId, Vec<u8>> SecretFinder::Search(Stream& stream)
@@ -690,7 +691,7 @@ namespace Swage
 
     bool SecretStore::Get(const char* id, void* output, usize length)
     {
-        return Get(SecretId::From85(id), output, length);
+        return Get(SecretId::From85(id).value(), output, length);
     }
 
     void SecretStore::Load(Stream& input)
@@ -716,5 +717,17 @@ namespace Swage
             output.Write(&length, sizeof(length));
             output.Write(data.data(), ByteSize(data));
         }
+    }
+
+    void SecretStore::Load()
+    {
+        if (Rc<Stream> s = AssetManager::Open("user:/secrets.bin"))
+            Secrets.Load(*s);
+    }
+
+    void SecretStore::Save()
+    {
+        if (Rc<Stream> s = AssetManager::Create("user:/secrets.bin"))
+            Secrets.Save(*s);
     }
 } // namespace Swage

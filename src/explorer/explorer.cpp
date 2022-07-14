@@ -775,48 +775,46 @@ void ShowKeyFinder()
     static std::string target_hash;
     ImGui::InputText("Hash", &target_hash);
 
-    try
+    if (auto secret = SecretId::From85(target_hash))
     {
-        SecretId secret = SecretId::From85(target_hash);
-
-        ImGui::Text("0x%X bytes, CRC=0x%016llX", secret.Length, secret.Crc);
-
-        static int target_pid = 0;
-        ImGui::InputInt("PID", &target_pid);
+        ImGui::Text("0x%X bytes, CRC=0x%016llX", secret->Length, secret->Crc);
 
         Rc<Stream> search_target;
 
-        if (ImGui::IsItemDeactivatedAfterEdit())
+        if (static int target_pid = 0;
+            ImGui::InputInt("PID", &target_pid, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
         {
             if (!(search_target = Win32ProcOpenStream(target_pid)))
                 SwLogError("Couldn't open PID {}", target_pid);
         }
 
-        static std::string target_file;
-        ImGui::InputText("File", &target_file);
-
-        if (ImGui::IsItemDeactivatedAfterEdit())
+        if (static std::string target_file;
+            ImGui::InputText("File", &target_file, ImGuiInputTextFlags_EnterReturnsTrue))
         {
             if (!(search_target = Win32FileOpen(target_file, true)))
-                SwLogError("Couldn't open file {}", target_pid);
+                SwLogError("Couldn't open file {}", target_file);
         }
 
         if (search_target)
         {
             SecretFinder finder;
-            finder.Add(secret);
+            finder.Add(*secret);
 
-            auto found = finder.Search(*search_target);
+            if (auto found = finder.Search(*search_target); !found.empty())
+            {
+                SwLogInfo("Found {}", target_hash);
 
-            SwLogInfo("{} {}", found.empty() ? "Couldn't find" : "Found", target_hash);
-
-            Secrets.Add(found);
-
-            if (Rc<Stream> s = AssetManager::Create("user:/secrets.bin"))
-                Secrets.Save(*s);
+                Secrets.Load();
+                Secrets.Add(found);
+                Secrets.Save();
+            }
+            else
+            {
+                SwLogInfo("Couldn't find {}", target_hash);
+            }
         }
     }
-    catch (const std::exception&)
+    else
     {
         ImGui::Text("Invalid hash");
     }
@@ -882,8 +880,7 @@ void SearchForKeys()
 {
     LoadLegacyKeys();
 
-    if (Rc<Stream> s = AssetManager::Open("user:/secrets.bin"))
-        Secrets.Load(*s);
+    Secrets.Load();
 
     if (Rc<Stream> s = AssetManager::Open("user:/extra_secrets.bin"))
         Secrets.Load(*s);
@@ -973,8 +970,7 @@ void SearchForKeys()
 
     LoadKeys();
 
-    if (Rc<Stream> s = AssetManager::Create("user:/secrets.bin"))
-        Secrets.Save(*s);
+    Secrets.Save();
 }
 
 class ArchiveExplorerApplication final : public Application
@@ -1014,8 +1010,7 @@ i32 ArchiveExplorerApplication::Init()
 
     AssetManager::Mount("", true, LoadZip(swref ResourceStream(nullptr, IDR_RESOURCES_ZIP, "ZIP")));
 
-    if (Rc<Stream> s = AssetManager::Open("user:/secrets.bin"))
-        Secrets.Load(*s);
+    Secrets.Load();
 
     LoadKeys();
 

@@ -12,7 +12,7 @@ namespace Swage
 
         String To85() const;
 
-        static SecretId From85(StringView text);
+        static Option<SecretId> From85(StringView text);
         static SecretId FromData(const void* data, usize length);
 
         inline bool operator==(const SecretId& rhs) const
@@ -62,6 +62,9 @@ namespace Swage
 
         void Load(Stream& input);
         void Save(Stream& output);
+
+        void Load();
+        void Save();
 
     private:
         HashMap<SecretId, Vec<u8>> secrets_;
