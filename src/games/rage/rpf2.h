@@ -13,7 +13,7 @@ namespace Swage::Rage
         u32 dwordC;
         u32 HeaderDecryptionTag;
 
-        // Used in game.rpf for GTA IV to signal all file should be decrypted immediately
+        // Only in GTA IV, used in game.rpf to signal all files are encrypted
         u32 FileDecryptionTag;
     };
 

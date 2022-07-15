@@ -15,22 +15,26 @@ namespace Swage::Rage
     {
         u32 Magic;
         u32 EntryCount;
-        u32 NamesLength;
+
+        // NamesLength:28
+        // NameShift:3
+        // PlatformBit:1
+        u32 dwordC;
         u32 DecryptionTag;
 
         u32 GetNamesLength() const
         {
-            return NamesLength & 0xFFFFFFF;
+            return dwordC & 0xFFFFFFF;
         }
 
         bool GetPlatformBit() const
         {
-            return NamesLength & 0x80000000;
+            return dwordC & 0x80000000;
         }
 
         u8 GetNameShift() const
         {
-            return (NamesLength >> 28) & 0x7;
+            return (dwordC >> 28) & 0x7;
         }
     };
 

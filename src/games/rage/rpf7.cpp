@@ -401,7 +401,7 @@ namespace Swage::Rage
         bool swap_endian = header.Magic == 0x37465052;
 
         if (swap_endian)
-            bits::bswapv(header.Magic, header.EntryCount, header.NamesLength, header.DecryptionTag);
+            bits::bswapv(header.Magic, header.EntryCount, header.dwordC, header.DecryptionTag);
 
         if (header.Magic != 0x52504637)
             throw std::runtime_error("Invalid header magic");

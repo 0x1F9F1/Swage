@@ -37,7 +37,7 @@ namespace Swage::Rage
         // VirtualFlags:14 (Resource)
         // PhysicalFlags:14 (Resource)
         // MainChunkOffset:3 (Resource)
-        // HasResourceFlags:1 (Resource)
+        // HasExtendedFlags:1 (Resource)
         u32 dword10;
 
         u32 GetHash() const
