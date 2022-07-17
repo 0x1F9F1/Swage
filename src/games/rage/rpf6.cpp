@@ -1,7 +1,10 @@
 #include "rpf6.h"
 
-#include "asset/stream.h"
 #include "core/bits.h"
+
+#include "asset/device/archive.h"
+#include "asset/stream.h"
+
 #include "crypto/aes.h"
 #include "crypto/secret.h"
 
@@ -98,7 +101,7 @@ namespace Swage::Rage
         }
     }
 
-    Rc<VirtualFileDevice> LoadRPF6(Rc<Stream> input)
+    Rc<FileDevice> LoadRPF6(Rc<Stream> input)
     {
         fiPackHeader6 header;
 

@@ -1,9 +1,9 @@
 #include "rpf2.h"
 
+#include "asset/device/archive.h"
 #include "asset/stream.h"
 
 #include "crypto/aes.h"
-
 #include "crypto/secret.h"
 
 namespace Swage::Rage
@@ -108,7 +108,7 @@ namespace Swage::Rage
         }
     }
 
-    Rc<VirtualFileDevice> LoadRPF2(Rc<Stream> input)
+    Rc<FileDevice> LoadRPF2(Rc<Stream> input)
     {
         constexpr u64 TOC_OFFSET = 0x800;
 

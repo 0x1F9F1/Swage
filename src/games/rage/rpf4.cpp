@@ -4,7 +4,7 @@
 
 namespace Swage::Rage
 {
-    Rc<VirtualFileDevice> LoadRPF4(Rc<Stream> input)
+    Rc<FileDevice> LoadRPF4(Rc<Stream> input)
     {
         return LoadRPF2(std::move(input));
     }

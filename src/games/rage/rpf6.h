@@ -1,6 +1,6 @@
 #pragma once
 
-#include "asset/device/archive.h"
+#include "asset/filedevice.h"
 
 namespace Swage::Rage
 {
@@ -140,5 +140,5 @@ namespace Swage::Rage
         }
     };
 
-    Rc<VirtualFileDevice> LoadRPF6(Rc<Stream> input);
+    Rc<FileDevice> LoadRPF6(Rc<Stream> input);
 } // namespace Swage::Rage
