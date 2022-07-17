@@ -2,10 +2,10 @@
 
 namespace Swage
 {
-    MemoryStream::MemoryStream(void* data, usize size)
+    MemoryStream::MemoryStream(const void* data, usize size)
         : current_(0)
         , size_(static_cast<i64>(size))
-        , data_(static_cast<u8*>(data))
+        , data_(static_cast<const u8*>(data))
     {}
 
     i64 MemoryStream::Seek(i64 offset, SeekWhence whence)

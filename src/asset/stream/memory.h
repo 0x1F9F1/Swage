@@ -7,7 +7,7 @@ namespace Swage
     class MemoryStream : public Stream
     {
     public:
-        MemoryStream(void* data = nullptr, usize size = 0);
+        MemoryStream(const void* data = nullptr, usize size = 0);
 
         i64 Seek(i64 offset, SeekWhence whence) override;
 
@@ -21,7 +21,7 @@ namespace Swage
         bool IsSynchronized() override;
 
     protected:
-        u8* data_ {};
+        const u8* data_ {};
         i64 size_ {};
         i64 current_ {};
 
