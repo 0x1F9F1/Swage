@@ -18,8 +18,8 @@ RPF8 | Red Dead Redemption 2
 A packfile typically consists of the following structures:
 * A header, starting with the 32-bit identifier `0x3?465052` or `0x5250463?` (where `?` is the version). Decoded as `"RPF?"` or `"?FPR"`.
 * A table of contents, stored as an array of entries, representing a directory tree or sorted list.<br/>
-  Some versions store the name of each file, while others hash them. <br/>
-  Each entry represents a directory, regular "binary" file, or a resource.
+  Some versions store the name of each file, while others hash them.<br/>
+  Each entry represents either: a directory, a regular "binary" file, or a resource.
 * A table of file names, though this is usally not available with hashed archives.
 
 Later versions generally encrypt the TOC and name table, and the endianness may vary depending on the platform.
@@ -111,7 +111,7 @@ Same as RPF2, but with larger file offsets
 
 ## RPF5 (Unused)
 
-Same as RPF2, but hashed and larger file offsets.
+Same as RPF2, but hashed and with larger file offsets.
 
 ## RPF6
 

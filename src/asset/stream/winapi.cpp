@@ -538,6 +538,7 @@ namespace Swage
     usize Win32ProcStream::Read(void* ptr, usize len)
     {
         usize total = 0;
+        u64 target_pos = 0;
 
         while (total < len)
         {
@@ -579,10 +580,13 @@ namespace Swage
                     here_ = region_start;
             }
 
+            if (total && target_pos != here_)
+                break;
+
             SIZE_T read = static_cast<SIZE_T>(std::min<u64>(len - total, end_ - here_));
 
-            if ((!Swage_ReadProcessMemory(
-                     handle_, reinterpret_cast<LPCVOID>(static_cast<usize>(here_)), ptr, read, &read) &&
+            if ((!Swage_ReadProcessMemory(handle_, reinterpret_cast<LPCVOID>(static_cast<usize>(here_)),
+                     static_cast<u8*>(ptr) + total, read, &read) &&
                     (GetLastError() != ERROR_PARTIAL_COPY)) ||
                 (read == 0))
             {
@@ -592,6 +596,7 @@ namespace Swage
 
             here_ += read;
             total += read;
+            target_pos = here_;
         }
 
         return total;
