@@ -91,7 +91,9 @@ namespace Swage::Bohemia
     Rc<FileDevice> LoadPBO(Rc<Stream> input)
     {
         BufferedStream stream(input);
-        stream.Rewind();
+
+        if (!stream.Rewind())
+            throw std::runtime_error("Failed to rewind stream");
 
         Rc<VirtualFileDevice> device = swref VirtualFileDevice();
         Rc<PboArchive> fops = swref PboArchive(std::move(input));

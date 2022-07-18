@@ -874,6 +874,13 @@ void LoadLegacyKeys()
         add_secrets(*s, 84, 0x400);  // Tables
         add_secrets(*s, 1, 0x10);    // IV
     }
+
+    if (Rc<Stream> s = AssetManager::Open("user:/rdr2_ios_keys.bin"); s && s->Size() == 0x21D10)
+    {
+        add_secrets(*s, 164, 0x140); // Keys
+        add_secrets(*s, 84, 0x400);  // Tables
+        add_secrets(*s, 1, 0x10);    // IV
+    }
 }
 
 void SearchForKeys()

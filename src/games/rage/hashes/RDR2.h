@@ -140,6 +140,52 @@ static const char* const RDR2_PS4_KEY_HASHES[164] {
     "Kmh;%-x3NH9z9*D!7g;b", // 0xC0
 };
 
+static const char* const RDR2_IOS_KEY_HASHES[164] {
+    "Kmh;%vce6CO@#MKl)|vO", "Kmh;%&7xoPwV*RT$FOit", "Kmh;%*ky^Hjd%_oScD_H", "Kmh;%`w;gR*U=QswRdIS",
+    "Kmh;%*p`ir6Z?S(+E$#t", "Kmh;%qh*H}7*z~1A?|w9", "Kmh;%G=oS5J&BT$(J?zy", "Kmh;%hj4ebZk369R1}=%",
+    "Kmh;%5pg(9o{aFHxt-7(", "Kmh;%n$DYRNClGxpt-W;", "Kmh;%m@P?BtF&k0mrHzU", "Kmh;%2Ioe8VeYv2{xB|v",
+    "Kmh;%&<a&)Pz%?vbp42j", "Kmh;%jWf2Yi|2sZSJOm;", "Kmh;%8XR1!g`tS&2_#`Z", "Kmh;%=_pHIKvZ%6mv65j",
+    "Kmh;%Vm#>~nr*)yoP&Y#", "Kmh;%Mt34nQ_}C=HnU=;", "Kmh;%RzIZPKzXetMs!qr", "Kmh;%H|0@M<C2Pm_5%lU",
+    "Kmh;%%WqgGKEbmW7?t*A", "Kmh;%o0jOy(dyCEmL*as", "Kmh;%gtWf0Ga)R>wOeEJ", "Kmh;%-%)}>{)Psdv^`j2",
+    "Kmh;%pEO#Q(kgFX?@mZy", "Kmh;%o|&BT|M)*56k7?<", "Kmh;%?E|g3vr{L?W}`k0", "Kmh;%KbR1ZpYAVB724F+",
+    "Kmh;%^ku|#_{T_<6Ej|3", "Kmh;%CyiikAyxL|2<_nI", "Kmh;%s0oAgAOhkaI;wA}", "Kmh;%GIX+D-c*oRd~X3N",
+    "Kmh;%$<UB8^Ys0VQMS1n", "Kmh;%34N!XD|gheW(5gD", "Kmh;%lkx_Kj$GxqsmqI_", "Kmh;%!W@`6pRNx{UDxR8",
+    "Kmh;%U_mt-_V`Yu5lH_z", "Kmh;%ws|`M&jOT_Iwg6}", "Kmh;%^|L|*K6`GrcDCs-", "Kmh;%mibx7KwkuU2v9Sg",
+    "Kmh;%J&`c2$wZ0FF$6)f", "Kmh;%+j<QhG=Q|a|G>gN", "Kmh;%9YsYN43+nk%c~a|", "Kmh;%G36^SnJk_4sScv!",
+    "Kmh;%dpZ#6L2bufkEYv?", "Kmh;%5$CCAt?7Ye=d|4E", "Kmh;%>^2*&skc$XSKXSV", "Kmh;%F1jqyPM2ZG0}YY{",
+    "Kmh;%stOlv&R#Y<ny{tt", "Kmh;%QPn7udfS=*?g{iA", "Kmh;%)9<5hBs)Ip{>C2?", "Kmh;%20E+%GkyvrN~wL0",
+    "Kmh;%1BD(IbM$PNjl6)4", "Kmh;%i0Qej3X!5;f6~i-", "Kmh;%p9Lk=DDWFx3FkXL", "Kmh;%25Slbd~y!M2%@qb",
+    "Kmh;%hDJlWR>06~xrK%#", "Kmh;%Xb-qV(t?w3)2_YI", "Kmh;%G?A}GOl)c5<s$%y", "Kmh;%vUazMct1Z=1`Y%_",
+    "Kmh;%8Mgnv@;9jzav>4_", "Kmh;%u3*V~xUxpeCPMLf", "Kmh;%HZlC*pgUx^+CrWP", "Kmh;%1Ru}(Oas=@YlAj+",
+    "Kmh;%E73<G98V*kROb%U", "Kmh;%z+^b>KK$NQgJVbc", "Kmh;%5uyF%GUj(|@WO>p", "Kmh;%XnsFVXi8D(`!PD@",
+    "Kmh;%xV%W@wq5Xog}6A}", "Kmh;%&EgKXh`B#hbsF^w", "Kmh;%Am!uHgzZ`myXhRu", "Kmh;%IQm`895&PcBeOsp",
+    "Kmh;%6ilxOaB7&Lb*9e1", "Kmh;%0MS=XB@t8sYpEs^", "Kmh;%lwJCT;x#DqlgTeq", "Kmh;%6SfxtQUW>O7A_xA",
+    "Kmh;%3jEPsnI^sM`u0uA", "Kmh;%?*6qdMWex!SxOGn", "Kmh;%Op;S?^9hs)dQ69|", "Kmh;%6jzAgnVmMUv`Ho{",
+    "Kmh;%Sd%#Q!^A|y0f9Jm", "Kmh;%ivK=Q_6yl>hh;$a", "Kmh;%Lw!%4-vcwT=L*^c", "Kmh;%e7}tnJZcm85mFwi",
+    "Kmh;%Ahn$||A0pqbf$t0", "Kmh;%Q*w!>_`UQ`m~eRk", "Kmh;%o0><uQM3=E>yd5z", "Kmh;%T4?%C3)oL-=6E5m",
+    "Kmh;%6*^po#dQpZ=!nQv", "Kmh;%cI(8%?d^eo;s7|U", "Kmh;%jo!FcJ8I(v(=wCx", "Kmh;%2&VGbi&zy#NX8&O",
+    "Kmh;%{8fS7t8PgHK<z2;", "Kmh;%SAVd1GZ1C9{i_i+", "Kmh;%<>>x4x3xwVec&#;", "Kmh;%%0PR|#$t#+<6eF1",
+    "Kmh;%1Il>_ay^3k7BvbA", "Kmh;%8%&_<8S(A3+N>ps", "Kmh;%&x-oHp2lz^j7_z`", "Kmh;%z5E}*J(WdH@eq<f",
+    "Kmh;%{5wvJ^q0R!IQb)K", "Kmh;%U+DJoPz*gttlTR+", "Kmh;%+`btjGWhwKL%r^T", "Kmh;%NeS3O46GdFtjrXS",
+    "Kmh;%LL5Mp3;6JE^^s7{", "Kmh;%7UMxF-uD!nqE=cS", "Kmh;%5DV$Ekg{<EkXpTp", "Kmh;%F+e1NQLC~4`ewAb",
+    "Kmh;%BI(wFM#84l52$(D", "Kmh;%xD_IYSo7n|EUPvC", "Kmh;%-gA~t6E_>-2QdR{", "Kmh;%D~8?46MHq&XSrBG",
+    "Kmh;%h2S>Vii*P21V_Q`", "Kmh;%O;7zoxusJ7o{lbQ", "Kmh;%>Gl+Wzjr&&TX&gB", "Kmh;%Y>qRQqsaQ3TM_pO",
+    "Kmh;%wG=PEx=#`)OqYyG", "Kmh;%)sDwb5p}?q?;iD+", "Kmh;%C6C7O2m9}+Oagmz", "Kmh;%toJ+=(8}P^E1QF0",
+    "Kmh;%#T`1u<`Ne`HY2I*", "Kmh;%1S#bT2LUFXBw?|j", "Kmh;%bxE`+Q(ATp(rl9P", "Kmh;%aE`Hgk8-?!L#bY*",
+    "Kmh;%<+_vWe1-GP8Ows>", "Kmh;%Kfbg%l=6rIuo(D&", "Kmh;%eoZ_yLR=ENfL$#W", "Kmh;%kQ4p+N{gk-0I}R#",
+    "Kmh;%qH<rt-52jEc7xN*", "Kmh;%P8uEPoSMP0+MaxC", "Kmh;%30@5x)~ILn?z8Q(", "Kmh;%+djPldmB)peyl7T",
+    "Kmh;%tyYZ{4kLi)kmq!3", "Kmh;%-LaXM<*17}sfk>F", "Kmh;%`BhXK!WLSWexMdQ", "Kmh;%k4}Tp!5b48fEy>>",
+    "Kmh;%1d6BXwP-!n65Rim", "Kmh;%KFR-rROEn}ZU?2V", "Kmh;%7=Dr_PE$lz9`@+Y", "Kmh;%-GZAAv)qLDFBXos",
+    "Kmh;%NE|288u35uE7x){", "Kmh;%&F{<JS7ea`NdC)t", "Kmh;%r^5)KQK-SYGh(Tx", "Kmh;%_($+A8&1(4t;t9e",
+    "Kmh;%yH2o0)H`J<3+HdY", "Kmh;%%b@y|hLsi5<w{_v", "Kmh;%EVIoIqdsRVvw**d", "Kmh;%Y&CP?eYuUkSHw~(",
+    "Kmh;%TN`H(w{SK@lBw{A", "Kmh;%Z$aF{K*%8dMckPy", "Kmh;%&J%ZW5Jjj%^>~|N", "Kmh;%_yy;Y+#EuYg{rD3",
+    "Kmh;%;L0E}OnqXZ+7?~k", "Kmh;%2M@D`s2N<~J=`l}", "Kmh;%GpbhiT@h#G#QPgx", "Kmh;%5-F1rlyI^P;|6h)",
+    "Kmh;%sHME&q0P1T8e=r5", "Kmh;%xG_rMv5Wx)1Il0Y", "Kmh;%JX!f&7LXf&?68v>", "Kmh;%+z4k<kI?TK#q9@o",
+    "Kmh;%3>~}D<9o6|4ct42", "Kmh;%8P)Qd<HiAMRP}1-", "Kmh;%R(R8!tUqR_lLdJc",
+
+    "Kmh;%-x3NH9z9*D!7g;b", // 0xC0
+};
+
 struct Tfit2Hashes
 {
     const char* InitTables;

@@ -208,11 +208,10 @@ namespace Swage::Bohemia
     Rc<FileDevice> LoadPAK(Rc<Stream> input)
     {
         BufferedStream stream(input);
-        stream.Rewind();
 
         IFF_Form header;
 
-        if (!stream.TryRead(&header, sizeof(header)))
+        if (!stream.Rewind() || !stream.TryRead(&header, sizeof(header)))
             throw std::runtime_error("Failed to read header");
 
         if (header.Chunk.ID != 0x464F524D) // FORM

@@ -194,6 +194,11 @@ namespace Swage::Rage::RPF8
     static u8 RDR2_PS4_IV[16];
     static bool RDR2_PS4_KEYS_LOADED;
 
+    static u32 RDR2_IOS_TFIT_KEYS[164][20][4];
+    static u32 RDR2_IOS_TFIT_TABLES[17][16][256];
+    static u8 RDR2_IOS_IV[16];
+    static bool RDR2_IOS_KEYS_LOADED;
+
 #define X(NAME, HASH)                                \
     do                                               \
     {                                                \
@@ -276,6 +281,20 @@ namespace Swage::Rage::RPF8
         return true;
     }
 
+    static bool LoadKeys_RDR2_IOS()
+    {
+        for (usize i = 0; i < 164; ++i)
+            X(RDR2_IOS_TFIT_KEYS[i], RDR2_IOS_KEY_HASHES[i]);
+
+        for (usize i = 0; i < 17; ++i)
+            for (usize j = 0; j < 16; ++j)
+                X(RDR2_IOS_TFIT_TABLES[i][j], RDR2_TFIT_TABLE_HASHES[i][j]);
+
+        X(RDR2_IOS_IV, RAGE_IV_HASH);
+
+        return true;
+    }
+
 #undef X
 
 #define X(NAME) finder.Add(NAME)
@@ -328,6 +347,7 @@ namespace Swage::Rage::RPF8
         RDR2_PC_KEYS_LOADED = LoadKeys_RDR2_PC();
         RDR2_ANDROID_KEYS_LOADED = LoadKeys_RDR2_ANDROID();
         RDR2_PS4_KEYS_LOADED = LoadKeys_RDR2_PS4();
+        RDR2_IOS_KEYS_LOADED = LoadKeys_RDR2_IOS();
     }
 
     Option<Ptr<Cipher>> MakeCipher(u16 platform, u16 tag)
@@ -372,6 +392,21 @@ namespace Swage::Rage::RPF8
             }
 
             return swnew TfitCbcCipher(RDR2_PS4_TFIT_KEYS[tag] + 1, RDR2_PS4_TFIT_TABLES, RDR2_PS4_IV);
+        }
+        else if (platform == 's')
+        {
+            if (!RDR2_IOS_KEYS_LOADED)
+                throw std::runtime_error("RDR2 IOS keys not loaded");
+
+            if (tag >= 163)
+            {
+                if (tag == 0xC0)
+                    tag = 163;
+                else
+                    return None;
+            }
+
+            return swnew TfitCbcCipher(RDR2_IOS_TFIT_KEYS[tag] + 1, RDR2_IOS_TFIT_TABLES, RDR2_IOS_IV);
         }
 
         return None;
