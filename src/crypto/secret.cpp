@@ -8,7 +8,7 @@
 namespace Swage
 {
     template <typename T>
-    inline bool bit_test(const T* bits, usize index)
+    static inline bool bit_test(const T* bits, usize index)
     {
         constexpr usize Radix = sizeof(T) * CHAR_BIT;
 
@@ -23,7 +23,7 @@ namespace Swage
     }
 
     template <typename T>
-    inline void bit_set(T* bits, usize index)
+    static inline void bit_set(T* bits, usize index)
     {
         constexpr usize Radix = sizeof(T) * CHAR_BIT;
 
@@ -33,12 +33,22 @@ namespace Swage
     // b85alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~"
     // https://github.com/python/cpython/blob/22df2e0322300d25c1255ceb73cacc0ebd96b20e/Lib/base64.py#L461
 
-    inline char b85encode1(u8 value)
+    static inline char b85encode1(u8 value)
     {
         static const char encoder[85 + 1] =
             "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
 
         return (value < 85) ? encoder[value] : '~';
+    }
+
+    static inline usize b85enclen(usize length)
+    {
+        return length + ((length + 3) / 4);
+    }
+
+    static inline usize b85declen(usize length)
+    {
+        return length - ((length + 4) / 5);
     }
 
     usize b85encode(const void* input, usize input_len, char* output, usize output_len)
@@ -88,7 +98,7 @@ namespace Swage
         return output_len - avail_out;
     }
 
-    inline u8 b85decode1(char value)
+    static inline u8 b85decode1(char value)
     {
         static const u8 decoder[94] = {
             // clang-format off
@@ -291,7 +301,7 @@ namespace Swage
 
     // Using a non-zero seed will break the "rolling" property of the hash.
     // It is also the same as just returning `hash + seed * pow(PolyFactor32, length)`
-    inline u32 PolyHash32(const void* data, usize length)
+    static inline u32 PolyHash32(const void* data, usize length)
     {
         const u8* data8 = static_cast<const u8*>(data);
 
@@ -308,7 +318,7 @@ namespace Swage
 
     // Returns `-1 * pow(HashFactor, length, 2**32)`
     // Used to remove (subtract) the length-1'th value from a hash
-    inline u32 PolyHashInverse(usize length)
+    static inline u32 PolyHashInverse(usize length)
     {
         u32 v = 0xFFFFFFFF;
 
@@ -322,7 +332,7 @@ namespace Swage
     }
 
     // Returns a permutation of the integer to use as a second hash
-    inline u32 Permute32(u32 x)
+    static inline u32 Permute32(u32 x)
     {
         return ~x * PolyFactor32;
     }

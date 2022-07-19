@@ -929,7 +929,7 @@ void SearchForKeys()
         }
         else
         {
-            SwLogError("Failed to find GTA5 PC keys");
+            SwLogError("Failed to find GTA5 PC keys ({})", found.size());
         }
     }
 
@@ -952,18 +952,23 @@ void SearchForKeys()
         }
         else
         {
-            SwLogError("Failed to find RDR2 PC keys");
+            SwLogError("Failed to find RDR2 PC keys ({})", found.size());
         }
     }
 
-    if (Rc<Stream> stream = AssetManager::Open("user:/daemon.dmp"))
+    for (StringView name : {"eboot.bin", "daemon.dmp"})
     {
+        Rc<Stream> stream = AssetManager::Open(Concat("user:/", name));
+
+        if (!stream)
+            continue;
+
         SwLogInfo("Searching for RDR2 PS4 Keys...");
 
         SecretFinder finder;
         Rage::RPF8::FindKeys_RDR2_PS4(finder);
 
-        if (auto found = finder.Search(*stream); found.size() == 163 + 84 + 1)
+        if (auto found = finder.Search(*stream); found.size() == 164 + 84 + 1)
         {
             SwLogInfo("Found RDR2 PS4 keys");
 
@@ -971,7 +976,7 @@ void SearchForKeys()
         }
         else
         {
-            SwLogError("Failed to find RDR2 PS4 keys");
+            SwLogError("Failed to find RDR2 PS4 keys ({})", found.size());
         }
     }
 
