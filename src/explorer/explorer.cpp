@@ -942,11 +942,9 @@ void SearchForKeys()
 
         auto found = finder.Search(*stream);
 
-        SwLogInfo("Found {}", found.size());
-
         if (found.size() >= 654)
         {
-            SwLogInfo("Found RDR2 PC keys");
+            SwLogInfo("Found RDR2 PC keys ({})", found.size());
 
             Secrets.Add(found);
         }

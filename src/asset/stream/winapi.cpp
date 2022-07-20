@@ -560,6 +560,9 @@ namespace Swage
                 u64 region_start = static_cast<u64>(reinterpret_cast<usize>(mem_info.BaseAddress));
                 u64 region_end = region_start + mem_info.RegionSize;
 
+                if (total && target_pos != region_start)
+                    break;
+
                 end_ = region_end;
 
                 if (state_ == 1)
@@ -580,8 +583,6 @@ namespace Swage
                     here_ = region_start;
             }
 
-            if (total && target_pos != here_)
-                break;
 
             SIZE_T read = static_cast<SIZE_T>(std::min<u64>(len - total, end_ - here_));
 
