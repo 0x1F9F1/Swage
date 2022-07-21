@@ -3,17 +3,17 @@
 RPF (RAGE PackFile) is the archive format used by the RAGE game engine.
 So far, there have been 9 iterations of the format, though only 7 have been used publicly.
 
-Version | Usage
---- | ---
-RPF0 | Rockstar Games Presents Table Tennis
-RPF1 | Unused
-RPF2 | Grand Theft Auto IV
-RPF3 | Grand Theft Auto IV Audio, Midnight Club: Los Angeles
-RPF4 | Max Payne 3
-RPF5 | Unused
-RPF6 | Red Dead Redemption
-RPF7 | Grand Theft Auto V
-RPF8 | Red Dead Redemption 2
+Version | Usage | Ident
+--- | --- | ---
+RPF0 | Rockstar Games Presents Table Tennis | `0x30465052` / `0x52504630`
+RPF1 | Unused | `0x31465052` / `0x52504631`
+RPF2 | Grand Theft Auto IV | `0x32465052` / `0x52504632`
+RPF3 | Grand Theft Auto IV Audio, Midnight Club: Los Angeles | `0x33465052` / `0x52504633`
+RPF4 | Max Payne 3 | `0x34465052` / `0x52504634`
+RPF5 | Unused | `0x35465052` / `0x52504635`
+RPF6 | Red Dead Redemption | `0x36465052` / `0x52504636`
+RPF7 | Grand Theft Auto V | `0x37465052` / `0x52504637`
+RPF8 | Red Dead Redemption 2 | `0x38465052` / `0x52504638`
 
 A packfile typically consists of the following structures:
 * A header, starting with the 32-bit identifier `0x3?465052` or `0x5250463?` (where `?` is the version). Decoded as `"RPF?"` or `"?FPR"`.
@@ -58,7 +58,7 @@ struct fiPackEntry0 // 16 bytes
 
 ## RPF1 (Unused)
 
-Conflicting evidence suggest it was same as RPF0, but hashed.
+Conflicting evidence suggests it was the same as RPF0, but hashed.
 
 ## RPF2
 
