@@ -583,7 +583,6 @@ namespace Swage
                     here_ = region_start;
             }
 
-
             SIZE_T read = static_cast<SIZE_T>(std::min<u64>(len - total, end_ - here_));
 
             if ((!Swage_ReadProcessMemory(handle_, reinterpret_cast<LPCVOID>(static_cast<usize>(here_)),

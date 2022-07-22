@@ -6,14 +6,50 @@
 #include "crypto/aes.h"
 #include "crypto/secret.h"
 
+namespace Swage::Rage::RPF2
+{
+    static const char* DEFAULT_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
+    static const char* MCLA_KEY_HASH = "AOHXW606r+x;@QZ+A|cr";
+    static const char* MP3_PC_KEY_HASH = "AOHXWm;adx2E-Xdw{0pB";
+
+    static Ptr<Cipher> BruteFindCipher(const fiPackHeader2& header, const fiPackEntry2& enc_root)
+    {
+        // The decryption tag is ambiguous, so just brute force through all the keys
+
+        for (const char* key_hash : {
+                 DEFAULT_KEY_HASH, // 0xFFFFFFFF
+                 MCLA_KEY_HASH,    // 0xFFFFFFFF
+                 MP3_PC_KEY_HASH,  // 0xFFFFFFFC
+             })
+        {
+            u8 key[32];
+
+            if (!Secrets.Get(key_hash, key, sizeof(key)))
+                continue;
+
+            Ptr<Cipher> cipher = swnew AesEcbCipher(key, sizeof(key), true);
+
+            fiPackEntry2 root = enc_root;
+
+            for (usize i = 0; i < 16; ++i)
+                cipher->Update(&root, sizeof(root));
+
+            if (root.IsDirectory() &&
+                std::max<u32>({root.GetEntryIndex(), root.GetEntryCount(),
+                    root.GetEntryIndex() + root.GetEntryCount() - 1}) < header.EntryCount)
+            {
+                return cipher;
+            }
+        }
+
+        return nullptr;
+    }
+} // namespace Swage::Rage::RPF2
+
 namespace Swage::Rage
 {
     static_assert(is_c_struct_v<fiPackHeader2, 0x18>);
     static_assert(is_c_struct_v<fiPackEntry2, 0x10>);
-
-    static const char* DEFAULT_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
-    static const char* MCLA_360_KEY_HASH = "AOHXW606r+x;@QZ+A|cr";
-    static const char* MP3_PC_KEY_HASH = "AOHXWm;adx2E-Xdw{0pB";
 
     class fiPackfile2 final : public FileOperationsT<fiPackEntry2>
     {
@@ -137,46 +173,16 @@ namespace Swage::Rage
 
         if (header.HeaderDecryptionTag)
         {
-            bool found = false;
+            Ptr<Cipher> cipher = RPF2::BruteFindCipher(header, entries.at(0));
 
-            for (const char* key_hash : {
-                     DEFAULT_KEY_HASH,  // 0xFFFFFFFF
-                     MCLA_360_KEY_HASH, // 0xFFFFFFFF
-                     MP3_PC_KEY_HASH,   // 0xFFFFFFFC
-                 })
-            {
-                u8 key[32];
-
-                if (!Secrets.Get(key_hash, key, sizeof(key)))
-                    continue;
-
-                AesEcbCipher cipher(key, sizeof(key), true);
-
-                fiPackEntry2 root = entries.at(0);
-
-                for (usize i = 0; i < 16; ++i)
-                    cipher.Cipher::Update(&root, sizeof(root));
-
-                if (!root.IsDirectory())
-                    continue;
-
-                if (std::max<u32>({root.GetEntryIndex(), root.GetEntryCount(),
-                        root.GetEntryIndex() + root.GetEntryCount() - 1}) >= entries.size())
-                    continue;
-
-                found = true;
-
-                for (usize i = 0; i < 16; ++i)
-                {
-                    cipher.Cipher::Update(entries.data(), ByteSize(entries));
-                    cipher.Cipher::Update(names.data(), ByteSize(names));
-                }
-            }
-
-            if (!found)
-            {
+            if (!cipher)
                 throw std::runtime_error(
                     fmt::format("Unknown header encryption 0x{:08x} (or missing key)", header.HeaderDecryptionTag));
+
+            for (usize i = 0; i < 16; ++i)
+            {
+                cipher->Update(entries.data(), ByteSize(entries));
+                cipher->Update(names.data(), ByteSize(names));
             }
         }
 

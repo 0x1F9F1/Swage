@@ -103,7 +103,7 @@ namespace Swage::Rage::RPF7
 #undef X
     }
 
-    Ptr<Cipher> MakeCipher(const fiPackHeader7& header, u32 key)
+    static Ptr<Cipher> MakeCipher(const fiPackHeader7& header, u32 key)
     {
         u32 tag = header.DecryptionTag;
 
@@ -168,6 +168,50 @@ namespace Swage::Rage::RPF7
 
         throw std::runtime_error("Unknown cipher tag");
     }
+
+    static u32 CalculateKeyIndex(StringView path, u64 file_size)
+    {
+        // rage::pgStreamer::Read
+        // u32 hash = rage::atStringHash(rage::fiAssetManager::FileName(path), 0);
+        auto [_, file] = SplitPath(path);
+        u32 hash = atStringHash(file);
+
+        // rage::pgStreamer::DeviceHandler::ProcessDecompression
+        return static_cast<u32>(hash + file_size) % 101;
+    }
+
+    static bool BruteFindCipher(const fiPackHeader7& header, const fiPackEntry7& enc_root, Ptr<Cipher>& cipher)
+    {
+        // "Next Gen" encryption uses 101 keys, selected based on the file size and name.
+        // If decryption failed, brute force through all the keys to see if one matches.
+        // This is particularly useful for bgscripts
+        // NOTE: This impl assumes the cipher uses ECB (no IV)
+
+        // Check if the original cipher is correct
+        {
+            fiPackEntry7 root = enc_root;
+            cipher->Update(&root, sizeof(root));
+
+            if (root.IsDirectory())
+                return true;
+        }
+
+        // Burte force through all of the keys
+        for (u32 header_key = 0; header_key < 101; ++header_key)
+        {
+            if (cipher = RPF7::MakeCipher(header, header_key))
+            {
+                fiPackEntry7 root = enc_root;
+                cipher->Update(&root, sizeof(root));
+
+                if (root.IsDirectory())
+                    return true;
+            }
+        }
+
+        cipher = nullptr;
+        return false;
+    }
 } // namespace Swage::Rage::RPF7
 
 namespace Swage::Rage
@@ -187,17 +231,6 @@ namespace Swage::Rage
         info.ResourceInfo.PhysicalFlags = GetPhysicalFlags();
 
         return true;
-    }
-
-    static u32 CalculateKeyIndex(StringView path, u64 file_size)
-    {
-        // rage::pgStreamer::Read
-        // u32 hash = rage::atStringHash(rage::fiAssetManager::FileName(path), 0);
-        auto [_, file] = SplitPath(path);
-        u32 hash = atStringHash(file);
-
-        // rage::pgStreamer::DeviceHandler::ProcessDecompression
-        return static_cast<u32>(hash + file_size) % 101;
     }
 
     static bool IsMaskedFileType(StringView path, StringView type)
@@ -339,8 +372,8 @@ namespace Swage::Rage
         Rc<Stream> result = swref PartialStream(offset, raw_size, Input);
 
         if (key_index != -1)
-            result =
-                swref EcbCipherStream(std::move(result), RPF7::MakeCipher(Header, CalculateKeyIndex(name, key_index)));
+            result = swref EcbCipherStream(
+                std::move(result), RPF7::MakeCipher(Header, RPF7::CalculateKeyIndex(name, key_index)));
 
         if (Header.GetPlatformBit())
             result = swref DecodeStream(std::move(result), swnew LzxdDecompressor(64 * 1024, 256 * 1024), size);
@@ -419,40 +452,17 @@ namespace Swage::Rage
         if (!input->TryRead(names.data(), ByteSize(names)))
             throw std::runtime_error("Failed to read names");
 
-        u32 header_key = CalculateKeyIndex(name, input->Size());
+        u32 key_index = RPF7::CalculateKeyIndex(name, input->Size());
 
-        if (Ptr<Cipher> cipher = RPF7::MakeCipher(header, header_key))
+        if (Ptr<Cipher> cipher = RPF7::MakeCipher(header, key_index))
         {
-            fiPackEntry7 root = entries[0];
-            cipher->Update(&root, sizeof(root));
-
-            if (!swap_endian && !root.IsDirectory())
+            if (u32 tag = header.DecryptionTag; (tag == 0xFEFFFFF || tag == 0xFFEFFFF) && !swap_endian)
             {
-                // "Next Gen" encryption uses 101 keys, selected based on the file size and name.
-                // If decryption failed, brute force through all the keys to see if one matches.
-                // This is particularly useful for bgscripts
-                if (header.DecryptionTag == 0xFEFFFFF || header.DecryptionTag == 0xFFEFFFF)
-                {
-                    for (header_key = 0; header_key < 101; ++header_key)
-                    {
-                        if (cipher = RPF7::MakeCipher(header, header_key))
-                        {
-                            root = entries[0];
-                            cipher->Update(&root, sizeof(root));
-
-                            if (root.IsDirectory())
-                                break;
-                        }
-                    }
-                }
-
-                if (!root.IsDirectory())
-                    throw std::runtime_error("Root entry is not a directory");
+                if (!RPF7::BruteFindCipher(header, entries.at(0), cipher))
+                    throw std::runtime_error(fmt::format("Unknown header encryption 0x{:08x} (or missing key)", tag));
             }
 
-            entries[0] = root;
-
-            cipher->Update(entries.data() + 1, (entries.size() - 1) * sizeof(fiPackEntry7));
+            cipher->Update(entries.data(), ByteSize(entries));
             cipher->Update(names.data(), names.size());
         }
 

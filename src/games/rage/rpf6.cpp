@@ -8,13 +8,35 @@
 #include "crypto/aes.h"
 #include "crypto/secret.h"
 
+namespace Swage::Rage::RPF6
+{
+    static const char* DEFAULT_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
+    static const char* RDR1_KEY_HASH = "AOHXWQNAqEHkQ0^;=)oc";
+
+    static Ptr<Cipher> MakeCipher(const fiPackHeader6& header)
+    {
+        const char* key_hash = nullptr;
+
+        switch (header.DecryptionTag)
+        {
+            case 0xFFFFFFFF: key_hash = DEFAULT_KEY_HASH; break;
+            case 0xFFFFFFFD: key_hash = RDR1_KEY_HASH; break;
+            default: return nullptr;
+        }
+
+        u8 key[32];
+
+        if (!Secrets.Get(key_hash, key, sizeof(key)))
+            return nullptr;
+
+        return swnew AesEcbCipher(key, sizeof(key), true);
+    }
+} // namespace Swage::Rage::RPF6
+
 namespace Swage::Rage
 {
     static_assert(is_c_struct_v<fiPackHeader6, 0x10>);
     static_assert(is_c_struct_v<fiPackEntry6, 0x14>);
-
-    static const char* DEFAULT_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
-    static const char* RDR1_KEY_HASH = "AOHXWQNAqEHkQ0^;=)oc";
 
     class fiPackfile6 final : public FileOperationsT<fiPackEntry6>
     {
@@ -114,43 +136,29 @@ namespace Swage::Rage
         bits::bswapv(header.Magic, header.EntryCount, header.NamesOffset, header.DecryptionTag);
 
         // Decryption cannot be performed in-place as the size has to be aligned to 16 bytes.
-        usize entries_size = (header.EntryCount * sizeof(fiPackEntry6) + 0xF) & ~usize(0xF);
-        Ptr<u8[]> entries_data(new u8[entries_size]);
+        Vec<u8> raw_entries((header.EntryCount * sizeof(fiPackEntry6) + 0xF) & ~usize(0xF));
 
-        if (!input->TryRead(entries_data.get(), entries_size))
+        if (!input->TryRead(raw_entries.data(), ByteSize(raw_entries)))
             throw std::runtime_error("Failed to read entries");
 
         if (header.DecryptionTag)
         {
-            const char* key_hash = nullptr;
+            Ptr<Cipher> cipher = RPF6::MakeCipher(header);
 
-            switch (header.DecryptionTag)
-            {
-                case 0xFFFFFFFF: key_hash = DEFAULT_KEY_HASH; break;
-                case 0xFFFFFFFD: key_hash = RDR1_KEY_HASH; break;
-            }
-
-            if (key_hash == nullptr)
-                throw std::runtime_error(fmt::format("Unknown decryption tag 0x{:08X}", header.DecryptionTag));
-
-            u8 key[32];
-
-            if (!Secrets.Get(key_hash, key, sizeof(key)))
+            if (!cipher)
                 throw std::runtime_error(
-                    fmt::format("Missing decryption tag 0x{:08X} ({})", header.DecryptionTag, key_hash));
-
-            AesEcbCipher cipher(key, sizeof(key), true);
+                    fmt::format("Unknown header encryption 0x{:08x} (or missing key)", header.DecryptionTag));
 
             for (usize i = 0; i < 16; ++i)
-                cipher.Cipher::Update(entries_data.get(), entries_size);
+                cipher->Update(raw_entries.data(), ByteSize(raw_entries));
         }
 
         Vec<fiPackEntry6> entries(header.EntryCount);
 
-        if (entries_size < ByteSize(entries))
+        if (ByteSize(raw_entries) < ByteSize(entries))
             throw std::runtime_error("Invalid entry count");
 
-        std::memcpy(entries.data(), entries_data.get(), ByteSize(entries));
+        std::memcpy(entries.data(), raw_entries.data(), ByteSize(entries));
 
         for (fiPackEntry6& entry : entries)
             bits::bswapv(entry.dword0, entry.dword4, entry.dword8, entry.dwordC, entry.dword10);
