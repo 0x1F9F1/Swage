@@ -459,7 +459,7 @@ namespace Swage::Rage
             if (u32 tag = header.DecryptionTag; (tag == 0xFEFFFFF || tag == 0xFFEFFFF) && !swap_endian)
             {
                 if (!RPF7::BruteFindCipher(header, entries.at(0), cipher))
-                    throw std::runtime_error(fmt::format("Unknown header encryption 0x{:08x} (or missing key)", tag));
+                    throw std::runtime_error(fmt::format("Unknown header encryption 0x{:08X} (or missing key)", tag));
             }
 
             cipher->Update(entries.data(), ByteSize(entries));

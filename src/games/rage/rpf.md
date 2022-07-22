@@ -56,9 +56,9 @@ struct fiPackEntry0 // 16 bytes
 };
 ```
 
-## RPF1 (Unused)
+## RPF1
 
-Conflicting evidence suggests it was the same as RPF0, but hashed.
+Unused. Conflicting evidence suggests it was the same as RPF0, but hashed.
 
 ## RPF2
 
@@ -109,9 +109,9 @@ Same as RPF2, but hashed.
 
 Same as RPF2, but with larger file offsets
 
-## RPF5 (Unused)
+## RPF5
 
-Same as RPF2, but hashed and with larger file offsets.
+Unused. Same as RPF2, but hashed and with larger file offsets.
 
 ## RPF6
 

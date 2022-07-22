@@ -147,7 +147,7 @@ namespace Swage::Rage
 
             if (!cipher)
                 throw std::runtime_error(
-                    fmt::format("Unknown header encryption 0x{:08x} (or missing key)", header.DecryptionTag));
+                    fmt::format("Unknown header encryption 0x{:08X} (or missing key)", header.DecryptionTag));
 
             for (usize i = 0; i < 16; ++i)
                 cipher->Update(raw_entries.data(), ByteSize(raw_entries));
