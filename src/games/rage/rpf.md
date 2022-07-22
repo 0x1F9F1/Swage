@@ -5,15 +5,15 @@ So far, there have been 9 iterations of the format, though only 7 have been used
 
 Version | Usage | Ident
 --- | --- | ---
-RPF0 | Rockstar Games Presents Table Tennis | `0x30465052` / `0x52504630`
-RPF1 | Unused | `0x31465052` / `0x52504631`
-RPF2 | Grand Theft Auto IV | `0x32465052` / `0x52504632`
-RPF3 | Grand Theft Auto IV Audio, Midnight Club: Los Angeles | `0x33465052` / `0x52504633`
-RPF4 | Max Payne 3 | `0x34465052` / `0x52504634`
-RPF5 | Unused | `0x35465052` / `0x52504635`
-RPF6 | Red Dead Redemption | `0x36465052` / `0x52504636`
-RPF7 | Grand Theft Auto V | `0x37465052` / `0x52504637`
-RPF8 | Red Dead Redemption 2 | `0x38465052` / `0x52504638`
+[RPF0](#RPF0) | Rockstar Games Presents Table Tennis | `0x30465052` / `0x52504630`
+[RPF1](#RPF1) | Unused | `0x31465052` / `0x52504631`
+[RPF2](#RPF2) | Grand Theft Auto IV | `0x32465052` / `0x52504632`
+[RPF3](#RPF3) | Grand Theft Auto IV Audio, Midnight Club: Los Angeles | `0x33465052` / `0x52504633`
+[RPF4](#RPF4) | Max Payne 3 | `0x34465052` / `0x52504634`
+[RPF5](#RPF5) | Unused | `0x35465052` / `0x52504635`
+[RPF6](#RPF6) | Red Dead Redemption | `0x36465052` / `0x52504636`
+[RPF7](#RPF7) | Grand Theft Auto V | `0x37465052` / `0x52504637`
+[RPF8](#RPF8) | Red Dead Redemption 2 | `0x38465052` / `0x52504638`
 
 A packfile typically consists of the following structures:
 * A header, starting with the 32-bit identifier `0x3?465052` or `0x5250463?` (where `?` is the version). Decoded as `"RPF?"` or `"?FPR"`.
