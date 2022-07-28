@@ -1,5 +1,10 @@
 // clang-format off
 
+static const char* GTA5_PS3_KEY_HASH = "AOHXW_ffoV0?kI{q=88_";
+static const char* GTA5_360_KEY_HASH = "AOHXW4B1`n4eiV>==o;n";
+static const char* LAUNCHER_KEY_HASH = "AOHXWRw-qk@gxZ~7^V<L";
+static const char* RAGE_KEY_HASH = "AOHXWBq$eTk1<dNnZje@";
+
 static const char* const GTA5_PC_KEY_HASHES[101] {
     "Kmh;%U_Qs9li(J^p7IaN", "Kmh;%4=(KA#<axXLutM|", "Kmh;%LAHqfOr-R}9^R9~", "Kmh;%prmDdE0==3Iq@I)",
     "Kmh;%C~%|dh9tJpucS5|", "Kmh;%mt1t_fl*CnrL8)%", "Kmh;%pw<-2OMERM>ww!x", "Kmh;%aedJv)XWkqDT8?}",

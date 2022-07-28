@@ -26,11 +26,6 @@ namespace Swage::Rage::RPF7
 {
 #include "hashes/GTA5.h"
 
-    static const char* GTA5_PS3_KEY_HASH = "AOHXW_ffoV0?kI{q=88_";
-    static const char* GTA5_360_KEY_HASH = "AOHXW4B1`n4eiV>==o;n";
-    static const char* LAUNCHER_KEY_HASH = "AOHXWRw-qk@gxZ~7^V<L";
-    static const char* RAGE_KEY_HASH = "AOHXWBq$eTk1<dNnZje@";
-
     static u32 GTA5_PC_TFIT_KEYS[101][20][4];
     static u32 GTA5_PC_TFIT_TABLES[17][16][256];
     static bool GTA5_PC_KEYS_LOADED;
@@ -463,7 +458,7 @@ namespace Swage::Rage
             }
 
             cipher->Update(entries.data(), ByteSize(entries));
-            cipher->Update(names.data(), names.size());
+            cipher->Update(names.data(), ByteSize(names));
         }
 
         for (fiPackEntry7& entry : entries)

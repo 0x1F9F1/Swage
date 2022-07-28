@@ -773,6 +773,9 @@ void ShowMainWindow()
 void ShowKeyFinder()
 {
     static std::string target_hash;
+    static int target_pid = 0;
+    static std::string target_file;
+
     ImGui::InputText("Hash", &target_hash);
 
     if (auto secret = SecretId::From85(target_hash))
@@ -781,15 +784,13 @@ void ShowKeyFinder()
 
         Rc<Stream> search_target;
 
-        if (static int target_pid = 0;
-            ImGui::InputInt("PID", &target_pid, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputInt("PID", &target_pid, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
         {
             if (!(search_target = Win32ProcOpenStream(target_pid)))
                 SwLogError("Couldn't open PID {}", target_pid);
         }
 
-        if (static std::string target_file;
-            ImGui::InputText("File", &target_file, ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputText("File", &target_file, ImGuiInputTextFlags_EnterReturnsTrue))
         {
             if (!(search_target = Win32FileOpen(target_file, true)))
                 SwLogError("Couldn't open file {}", target_file);
@@ -940,9 +941,7 @@ void SearchForKeys()
         SecretFinder finder;
         Rage::RPF8::FindKeys_RDR2_PC(finder);
 
-        auto found = finder.Search(*stream);
-
-        if (found.size() >= 654)
+        if (auto found = finder.Search(*stream); found.size() >= 654)
         {
             SwLogInfo("Found RDR2 PC keys ({})", found.size());
 
