@@ -18,6 +18,7 @@
 #include "games/bohemia/pak.h"
 #include "games/bohemia/pbo.h"
 
+#include "games/rage/img3.h"
 #include "games/rage/rpf0.h"
 #include "games/rage/rpf2.h"
 #include "games/rage/rpf3.h"
@@ -68,6 +69,8 @@ Rc<FileDevice> LoadArchive(StringView name, Rc<Stream> handle)
             case 0x04034B50: return LoadZip(std::move(handle));
 
             case 0x4D524F46: return Bohemia::LoadPAK(std::move(handle));
+
+            case 0xA94E2A52: return Rage::LoadIMG(std::move(handle));
         }
     }
 
@@ -76,6 +79,9 @@ Rc<FileDevice> LoadArchive(StringView name, Rc<Stream> handle)
 
     if (EndsWithI(name, ".pbo"))
         return Bohemia::LoadPBO(std::move(handle));
+
+    if (EndsWithI(name, ".img"))
+        return Rage::LoadIMG(std::move(handle));
 
     return nullptr;
 }

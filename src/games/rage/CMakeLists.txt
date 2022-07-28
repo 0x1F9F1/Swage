@@ -20,6 +20,9 @@ swage_add_component(SwRAGE
     rpf8.h
     rpf8.cpp
 
+    img3.h
+    img3.cpp
+
     rsc.h
     rsc.cpp
 
