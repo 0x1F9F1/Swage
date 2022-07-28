@@ -16,10 +16,10 @@ namespace Swage::Rage
 
     struct IMGEntry3
     {
-        u32 dword0; // File Size?
+        u32 dword0;
         u32 dword4;
         u32 dword8;
-        u16 wordC; // Size in sectors Disk Offset?
+        u16 wordC;
         u16 wordE;
 
         u32 GetVirtualSize() const
@@ -73,5 +73,5 @@ namespace Swage::Rage
         }
     };
 
-    Rc<VirtualFileDevice> LoadIMG(Rc<Stream> input);
+    Rc<VirtualFileDevice> LoadIMG3(Rc<Stream> input);
 } // namespace Swage::Rage

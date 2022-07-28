@@ -70,7 +70,7 @@ Rc<FileDevice> LoadArchive(StringView name, Rc<Stream> handle)
 
             case 0x4D524F46: return Bohemia::LoadPAK(std::move(handle));
 
-            case 0xA94E2A52: return Rage::LoadIMG(std::move(handle));
+            case 0xA94E2A52: return Rage::LoadIMG3(std::move(handle));
         }
     }
 
@@ -81,7 +81,7 @@ Rc<FileDevice> LoadArchive(StringView name, Rc<Stream> handle)
         return Bohemia::LoadPBO(std::move(handle));
 
     if (EndsWithI(name, ".img"))
-        return Rage::LoadIMG(std::move(handle));
+        return Rage::LoadIMG3(std::move(handle));
 
     return nullptr;
 }

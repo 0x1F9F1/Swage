@@ -73,7 +73,7 @@ namespace Swage::Rage
             cipher.Update(data, length);
     }
 
-    Rc<VirtualFileDevice> LoadIMG(Rc<Stream> input)
+    Rc<VirtualFileDevice> LoadIMG3(Rc<Stream> input)
     {
         constexpr u64 TOC_OFFSET = 0x14;
 
