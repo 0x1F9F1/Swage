@@ -10,10 +10,10 @@ namespace Swage::Rage
     static_assert(is_c_struct_v<IMGHeader3, 0x14>);
     static_assert(is_c_struct_v<IMGEntry3, 0x10>);
 
-    class IMGArchive final : public FileOperationsT<IMGEntry3>
+    class IMGArchive3 final : public FileOperationsT<IMGEntry3>
     {
     public:
-        IMGArchive(Rc<Stream> input);
+        IMGArchive3(Rc<Stream> input);
 
         Rc<Stream> Input {};
 
@@ -21,11 +21,11 @@ namespace Swage::Rage
         void Stat(File& file, FolderEntry& entry) override;
     };
 
-    IMGArchive::IMGArchive(Rc<Stream> input)
+    IMGArchive3::IMGArchive3(Rc<Stream> input)
         : Input(std::move(input))
     {}
 
-    Rc<Stream> IMGArchive::Open(File& file)
+    Rc<Stream> IMGArchive3::Open(File& file)
     {
         const IMGEntry3& entry = GetData(file);
 
@@ -58,7 +58,7 @@ namespace Swage::Rage
         return result.Open(Input);
     }
 
-    void IMGArchive::Stat(File& file, FolderEntry& output)
+    void IMGArchive3::Stat(File& file, FolderEntry& output)
     {
         const IMGEntry3& entry = GetData(file);
 
@@ -124,7 +124,7 @@ namespace Swage::Rage
         }
 
         Rc<VirtualFileDevice> device = swref VirtualFileDevice();
-        Rc<IMGArchive> fops = swref IMGArchive(std::move(input));
+        Rc<IMGArchive3> fops = swref IMGArchive3(std::move(input));
 
         usize name_offset = 0;
 
