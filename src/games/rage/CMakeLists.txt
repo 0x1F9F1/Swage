@@ -26,6 +26,9 @@ swage_add_component(SwRAGE
     rsc.h
     rsc.cpp
 
+    cipher16.h
+    cipher16.cpp
+
     utils.h
 
     hashes/GTA5.h

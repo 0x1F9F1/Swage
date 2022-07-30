@@ -2,9 +2,9 @@
 
 #include "asset/device/archive.h"
 #include "asset/stream.h"
-
-#include "crypto/aes.h"
 #include "crypto/secret.h"
+
+#include "cipher16.h"
 
 namespace Swage::Rage::RPF2
 {
@@ -27,12 +27,11 @@ namespace Swage::Rage::RPF2
             if (!Secrets.Get(key_hash, key, sizeof(key)))
                 continue;
 
-            Ptr<Cipher> cipher = swnew AesEcbCipher(key, sizeof(key), true);
+            Ptr<Cipher> cipher = swnew AesEcbCipher16(key, sizeof(key), true);
 
             fiPackEntry2 root = enc_root;
 
-            for (usize i = 0; i < 16; ++i)
-                cipher->Update(&root, sizeof(root));
+            cipher->Update(&root, sizeof(root));
 
             if (root.IsDirectory() &&
                 std::max<u32>({root.GetEntryIndex(), root.GetEntryCount(),
@@ -179,11 +178,8 @@ namespace Swage::Rage
                 throw std::runtime_error(
                     fmt::format("Unknown header encryption 0x{:08X} (or missing key)", header.HeaderDecryptionTag));
 
-            for (usize i = 0; i < 16; ++i)
-            {
-                cipher->Update(entries.data(), ByteSize(entries));
-                cipher->Update(names.data(), ByteSize(names));
-            }
+            cipher->Update(entries.data(), ByteSize(entries));
+            cipher->Update(names.data(), ByteSize(names));
         }
 
         // rage::fiPackfile::FindEntry assumes the first entry is a directory (and ignores its name)

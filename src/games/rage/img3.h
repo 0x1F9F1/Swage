@@ -1,6 +1,10 @@
 #pragma once
 
-#include "asset/device/archive.h"
+namespace Swage
+{
+    class Stream;
+    class FileDevice;
+} // namespace Swage
 
 namespace Swage::Rage
 {
@@ -73,5 +77,5 @@ namespace Swage::Rage
         }
     };
 
-    Rc<VirtualFileDevice> LoadIMG3(Rc<Stream> input);
+    Rc<FileDevice> LoadIMG3(Rc<Stream> input);
 } // namespace Swage::Rage

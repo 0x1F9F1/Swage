@@ -1,9 +1,10 @@
 #include "img3.h"
 
+#include "asset/device/archive.h"
 #include "asset/stream.h"
-#include "crypto/aes.h"
-#include "crypto/cipher.h"
 #include "crypto/secret.h"
+
+#include "cipher16.h"
 
 namespace Swage::Rage
 {
@@ -67,13 +68,7 @@ namespace Swage::Rage
 
     static const char* DEFAULT_KEY_HASH = "AOHXWtl`i|@X1feM%MjV";
 
-    static void Cipher16(Cipher& cipher, void* data, usize length)
-    {
-        for (usize i = 0; i < 16; ++i)
-            cipher.Update(data, length);
-    }
-
-    Rc<VirtualFileDevice> LoadIMG3(Rc<Stream> input)
+    Rc<FileDevice> LoadIMG3(Rc<Stream> input)
     {
         constexpr u64 TOC_OFFSET = 0x14;
 
@@ -91,9 +86,9 @@ namespace Swage::Rage
             if (!Secrets.Get(DEFAULT_KEY_HASH, key, sizeof(key)))
                 throw std::runtime_error("Invalid header magic (or missing key)");
 
-            cipher = swnew AesEcbCipher(key, sizeof(key), true);
+            cipher = swnew AesEcbCipher16(key, sizeof(key), true);
 
-            Cipher16(*cipher, &header, 0x10);
+            cipher->Update(&header, 0x10);
 
             if (header.Magic != 0xA94E2A52)
                 throw std::runtime_error("Invalid header magic");
@@ -119,8 +114,8 @@ namespace Swage::Rage
 
         if (cipher)
         {
-            Cipher16(*cipher, entries.data(), ByteSize(entries));
-            Cipher16(*cipher, names.data(), ByteSize(names));
+            cipher->Update(entries.data(), ByteSize(entries));
+            cipher->Update(names.data(), ByteSize(names));
         }
 
         Rc<VirtualFileDevice> device = swref VirtualFileDevice();

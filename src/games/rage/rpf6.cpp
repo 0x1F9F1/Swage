@@ -1,12 +1,11 @@
 #include "rpf6.h"
 
-#include "core/bits.h"
-
 #include "asset/device/archive.h"
 #include "asset/stream.h"
-
-#include "crypto/aes.h"
+#include "core/bits.h"
 #include "crypto/secret.h"
+
+#include "cipher16.h"
 
 namespace Swage::Rage::RPF6
 {
@@ -29,7 +28,7 @@ namespace Swage::Rage::RPF6
         if (!Secrets.Get(key_hash, key, sizeof(key)))
             return nullptr;
 
-        return swnew AesEcbCipher(key, sizeof(key), true);
+        return swnew AesEcbCipher16(key, sizeof(key), true);
     }
 } // namespace Swage::Rage::RPF6
 
@@ -149,8 +148,7 @@ namespace Swage::Rage
                 throw std::runtime_error(
                     fmt::format("Unknown header encryption 0x{:08X} (or missing key)", header.DecryptionTag));
 
-            for (usize i = 0; i < 16; ++i)
-                cipher->Update(raw_entries.data(), ByteSize(raw_entries));
+            cipher->Update(raw_entries.data(), ByteSize(raw_entries));
         }
 
         Vec<fiPackEntry6> entries(header.EntryCount);
