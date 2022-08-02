@@ -13,6 +13,7 @@ namespace Swage::Rage
         AesEcbCipher cipher_;
 
         usize Update(const u8* input, u8* output, usize length) override;
+
         usize GetBlockSize() override;
     };
 } // namespace Swage::Rage

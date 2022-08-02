@@ -36,7 +36,7 @@ namespace Swage::Rage
 
         ArchiveFile result;
 
-        if (entry.IsResource())
+        if (entry.IsResource() && !entry.IsOldResource())
         {
             // TODO: Merge this with RPF2 resource handling?
 
@@ -125,7 +125,9 @@ namespace Swage::Rage
 
         for (const IMGEntry3& entry : entries)
         {
-            // SwAssert(name_offset < names.size());
+            if (name_offset >= names.size())
+                throw std::runtime_error("Invalid names (too small)");
+
             StringView name = SubCString(names, name_offset);
             fops->AddFile(device->Files, name, entry);
             name_offset += name.size() + 1;
