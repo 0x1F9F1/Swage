@@ -13,7 +13,7 @@ namespace Swage
 {
     ArchiveFile ArchiveFile::Deflated(u64 offset, u64 size, u64 raw_size, i32 window_bits)
     {
-        return ArchiveFile(offset, size, raw_size, [window_bits] { return swnew DeflateDecompressor(window_bits); });
+        return ArchiveFile(offset, size, raw_size, [window_bits] { return CreateDeflateDecompressor(window_bits); });
     }
 
     Rc<Stream> ArchiveFile::Open(Rc<Stream> input) const

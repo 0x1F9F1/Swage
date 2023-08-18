@@ -86,4 +86,7 @@ swage_add_component(SwAsset
 
     transform/lzss.h
     transform/lzss.cpp
+
+    transform/zstd.h
+    transform/zstd.cpp
 )

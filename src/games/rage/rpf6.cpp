@@ -1,7 +1,12 @@
 #include "rpf6.h"
 
-#include "asset/device/archive.h"
+#include "asset/device/virtual.h"
 #include "asset/stream.h"
+#include "asset/stream/decode.h"
+#include "asset/stream/partial.h"
+#include "asset/transform/deflate.h"
+#include "asset/transform/lzxd.h"
+#include "asset/transform/zstd.h"
 #include "core/bits.h"
 #include "crypto/secret.h"
 
@@ -37,6 +42,20 @@ namespace Swage::Rage
     static_assert(is_c_struct_v<fiPackHeader6, 0x10>);
     static_assert(is_c_struct_v<fiPackEntry6, 0x14>);
 
+    struct fiPackEntryDebug6
+    {
+        u32 NameOffset;
+        u32 LastModified;
+
+        u64 /*time_t */ GetLastModified() const
+        {
+            if (LastModified == 0)
+                return 0;
+
+            return static_cast<u64>(LastModified) + 12591158400 - 11644473600;
+        }
+    };
+
     class fiPackfile6 final : public FileOperationsT<fiPackEntry6>
     {
     public:
@@ -51,7 +70,8 @@ namespace Swage::Rage
         Rc<Stream> Open(File& file) override;
         void Stat(File& file, FolderEntry& entry) override;
 
-        void AddToVFS(VFS& vfs, const Vec<fiPackEntry6>& entries, String& path, const fiPackEntry6& directory);
+        void AddToVFS(VFS& vfs, const Vec<fiPackEntry6>& entries, String& path, const fiPackEntry6& directory,
+            const Callback<void(String& path, u32 index)>& get_name);
     };
 
     Rc<Stream> fiPackfile6::Open(File& file)
@@ -61,32 +81,78 @@ namespace Swage::Rage
         u32 size = entry.GetSize();
         u32 raw_size = entry.GetOnDiskSize();
         u64 offset = entry.GetOffset();
-        i32 comp_type = 0;
+
+        Ptr<BinaryTransform> transform;
 
         if (entry.IsResource())
         {
             u32 rsc_size = entry.HasExtendedFlags() ? 0x10 : 0xC;
 
             if (raw_size < rsc_size)
-                throw std::runtime_error("Resource raw size is too small");
+                throw std::runtime_error("Resource raw size is too small (RSC header)");
 
             offset += rsc_size;
             raw_size -= rsc_size;
 
-            // TODO: Handle LZXD compression
             if (entry.IsCompressed())
-                comp_type = 15;
+            {
+                u8 magic[4];
+
+                if (!Input->TryReadBulk(&magic, sizeof(magic), offset))
+                    std::memset(magic, 0, sizeof(magic));
+
+                if ((magic[3] == 0xFD) && (magic[2] == 0x2F) && (magic[1] == 0xB5) && ((magic[0] & 0xF0) == 0x20))
+                {
+                    transform = CreateZstdDecompressor();
+                }
+                else if ((magic[0] == 0x0F) && (magic[1] == 0xF5) && (magic[2] == 0x12) && (magic[3] == 0xF1))
+                {
+                    if (raw_size < 8)
+                        throw std::runtime_error("Resource raw size is too small (LZXD header)");
+
+                    offset += 8;
+                    raw_size -= 8;
+
+                    // bits::be<u32> lzxd_raw_size;
+                    // SwAssert(Input->TryReadBulk(&lzxd_raw_size, sizeof(lzxd_raw_size), offset - 4) &&
+                    //     (raw_size == lzxd_raw_size));
+
+                    transform = CreateLzxdDecompressor(0, 0);
+                }
+                else if ((magic[0] == 0x78) && (magic[1] == 0xDA))
+                {
+                    transform = CreateDeflateDecompressor(15);
+                }
+                else
+                {
+                    SwLogError("Unrecognized file compression: {:02X} {:02X} {:02X} {:02X}", magic[0], magic[1],
+                        magic[2], magic[3]);
+                }
+            }
         }
-        else
+        else if (entry.IsCompressed())
         {
-            if (entry.IsCompressed())
-                comp_type = -15;
+            u8 magic[4];
+
+            if (!Input->TryReadBulk(&magic, sizeof(magic), offset))
+                std::memset(magic, 0, sizeof(magic));
+
+            if ((magic[3] == 0xFD) && (magic[2] == 0x2F) && (magic[1] == 0xB5) && ((magic[0] & 0xF0) == 0x20))
+            {
+                transform = CreateZstdDecompressor();
+            }
+            else
+            {
+                transform = CreateDeflateDecompressor(-15);
+            }
         }
 
-        ArchiveFile result = comp_type ? ArchiveFile::Deflated(offset, size, raw_size, comp_type)
-                                       : ArchiveFile::Stored(offset, raw_size);
+        Rc<Stream> result = swref PartialStream(offset, raw_size, Input);
 
-        return result.Open(Input);
+        if (transform)
+            result = swref DecodeStream(std::move(result), std::move(transform), size);
+
+        return result;
     }
 
     void fiPackfile6::Stat(File& file, FolderEntry& output)
@@ -96,22 +162,22 @@ namespace Swage::Rage
         output.Size = entry.GetSize();
     }
 
-    void fiPackfile6::AddToVFS(VFS& vfs, const Vec<fiPackEntry6>& entries, String& path, const fiPackEntry6& directory)
+    void fiPackfile6::AddToVFS(VFS& vfs, const Vec<fiPackEntry6>& entries, String& path, const fiPackEntry6& directory,
+        const Callback<void(String& path, u32 index)>& get_name)
     {
         for (u32 i = directory.GetEntryIndex(), end = i + directory.GetEntryCount(); i < end; ++i)
         {
             usize old_size = path.size();
 
-            const fiPackEntry6& entry = entries.at(i);
+            get_name(path, i);
 
-            // TODO: Dehash names
-            fmt::format_to(std::back_inserter(path), "${:08X}", entry.GetHash());
+            const fiPackEntry6& entry = entries.at(i);
 
             if (entry.IsDirectory())
             {
                 path += '/';
 
-                AddToVFS(vfs, entries, path, entry);
+                AddToVFS(vfs, entries, path, entry, get_name);
             }
             else
             {
@@ -132,13 +198,24 @@ namespace Swage::Rage
         if (header.Magic != 0x36465052)
             throw std::runtime_error("Invalid header magic");
 
-        bits::bswapv(header.Magic, header.EntryCount, header.NamesOffset, header.DecryptionTag);
+        bits::bswapv(header.Magic, header.EntryCount, header.DebugDataOffset, header.DecryptionTag);
 
         // Decryption cannot be performed in-place as the size has to be aligned to 16 bytes.
         Vec<u8> raw_entries((header.EntryCount * sizeof(fiPackEntry6) + 0xF) & ~usize(0xF));
 
         if (!input->TryRead(raw_entries.data(), ByteSize(raw_entries)))
             throw std::runtime_error("Failed to read entries");
+
+        Vec<u8> debug_data;
+        i64 debug_data_offset = static_cast<i64>(header.DebugDataOffset) * 8;
+
+        if (debug_data_offset)
+        {
+            debug_data.resize(static_cast<usize>(input->Size() - debug_data_offset));
+
+            if (!input->TryReadBulk(debug_data.data(), ByteSize(debug_data), debug_data_offset))
+                throw std::runtime_error("Failed to read data");
+        }
 
         if (header.DecryptionTag)
         {
@@ -149,6 +226,9 @@ namespace Swage::Rage
                     fmt::format("Unknown header encryption 0x{:08X} (or missing key)", header.DecryptionTag));
 
             cipher->Update(raw_entries.data(), ByteSize(raw_entries));
+
+            if (debug_data_offset)
+                cipher->Update(debug_data.data(), ByteSize(debug_data) & ~0xF);
         }
 
         Vec<fiPackEntry6> entries(header.EntryCount);
@@ -161,6 +241,25 @@ namespace Swage::Rage
         for (fiPackEntry6& entry : entries)
             bits::bswapv(entry.dword0, entry.dword4, entry.dword8, entry.dwordC, entry.dword10);
 
+        Vec<fiPackEntryDebug6> debug_entries;
+        Vec<char> debug_names;
+
+        if (debug_data_offset)
+        {
+            debug_entries.resize(header.EntryCount);
+
+            if (ByteSize(debug_data) < ByteSize(debug_entries))
+                throw std::runtime_error("Invalid entry count");
+
+            debug_names.resize(ByteSize(debug_data) - ByteSize(debug_entries));
+
+            std::memcpy(debug_entries.data(), debug_data.data(), ByteSize(debug_entries));
+            std::memcpy(debug_names.data(), debug_data.data() + ByteSize(debug_entries), ByteSize(debug_names));
+
+            for (fiPackEntryDebug6& entry : debug_entries)
+                bits::bswapv(entry.NameOffset, entry.LastModified);
+        }
+
         // rage::fiPackfile::FindEntry assumes the first entry is a directory (and ignores its name)
         const fiPackEntry6& root = entries.at(0);
 
@@ -170,8 +269,24 @@ namespace Swage::Rage
         Rc<VirtualFileDevice> device = swref VirtualFileDevice();
         Rc<fiPackfile6> fops = swref fiPackfile6(std::move(input), header);
 
+        const auto get_name = [&](String& path, usize index) {
+            if (debug_data_offset)
+            {
+                const fiPackEntryDebug6& debug_entry = debug_entries.at(index);
+
+                path += SubCString(debug_names, debug_entry.NameOffset);
+            }
+            else
+            {
+                const fiPackEntry6& entry = entries.at(index);
+
+                // TODO: Dehash names
+                fmt::format_to(std::back_inserter(path), "${:08X}", entry.GetHash());
+            }
+        };
+
         String path;
-        fops->AddToVFS(device->Files, entries, path, root);
+        fops->AddToVFS(device->Files, entries, path, root, get_name);
 
         return device;
     }

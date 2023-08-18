@@ -67,6 +67,20 @@ namespace Swage
         return is_loaded;
     }
 
+    class LzxdDecompressor : public BinaryTransform
+    {
+    public:
+        LzxdDecompressor(u32 window_size, u32 partition_size);
+        ~LzxdDecompressor() override;
+
+        bool Reset() override;
+        bool Update() override;
+
+    private:
+        void* state_ {};
+        void* context_ {};
+    };
+
     LzxdDecompressor::LzxdDecompressor(u32 window_size, u32 partition_size)
     {
         if (!LoadXCompress())
@@ -114,5 +128,10 @@ namespace Swage
         AvailOut -= output_len;
 
         return error >= 0;
+    }
+
+    Ptr<BinaryTransform> CreateLzxdDecompressor(u32 window_size, u32 partition_size)
+    {
+        return swnew LzxdDecompressor(window_size, partition_size);
     }
 } // namespace Swage

@@ -8,7 +8,7 @@ namespace Swage::Rage
     {
         u32 Magic;
         u32 EntryCount;
-        u32 NamesOffset;
+        u32 DebugDataOffset;
         u32 DecryptionTag;
     };
 
@@ -17,7 +17,8 @@ namespace Swage::Rage
         // NameHash
         u32 dword0;
 
-        // OnDiskSize
+        // OnDiskSize:31
+        // IsXenonResource:1
         u32 dword4;
 
         // ResourceVersion:8 (Resource)
@@ -47,7 +48,12 @@ namespace Swage::Rage
 
         u32 GetOnDiskSize() const
         {
-            return dword4;
+            return dword4 & 0x7FFFFFFF;
+        }
+
+        bool IsXenonResource() const
+        {
+            return dword4 & 0x80000000;
         }
 
         u64 GetOffset() const
@@ -78,7 +84,7 @@ namespace Swage::Rage
             if (IsCompressed())
                 return dwordC & 0x3FFFFFFF;
 
-            return dword4;
+            return GetOnDiskSize();
         }
 
         u32 GetEntryCount() const
@@ -119,7 +125,7 @@ namespace Swage::Rage
 
         bool HasExtendedFlags() const
         {
-            return (dword10 & 0x80000000) == 0x80000000;
+            return dword10 & 0x80000000;
         }
 
         u32 GetMainChunkOffset() const

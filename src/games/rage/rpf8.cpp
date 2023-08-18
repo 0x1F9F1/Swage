@@ -698,11 +698,11 @@ namespace Swage::Rage
         switch (entry.GetCompressorId())
         {
             case 1: // Deflate
-                result = swref DecodeStream(std::move(result), swnew DeflateDecompressor(-15), size);
+                result = swref DecodeStream(std::move(result), CreateDeflateDecompressor(-15), size);
                 break;
 
             case 2: // Oodle
-                result = swref DecodeStream(std::move(result), swnew OodleDecompressor(size), size);
+                result = swref DecodeStream(std::move(result), CreateOodleDecompressor(size), size);
                 break;
         }
 

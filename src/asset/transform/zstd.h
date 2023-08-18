@@ -4,5 +4,5 @@
 
 namespace Swage
 {
-    Ptr<BinaryTransform> CreateLzssDecompressor();
+    Ptr<BinaryTransform> CreateZstdDecompressor();
 } // namespace Swage

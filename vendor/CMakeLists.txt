@@ -2,14 +2,22 @@ project(ThirdParty C CXX)
 
 set(SDL2_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.22/include" CACHE PATH "SDL2 Include Directories")
 
+set(ZSTD_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/zstd-v1.5.5/include" CACHE PATH "ZSTD Include Directories")
+
 if(${CMAKE_SIZEOF_VOID_P} MATCHES 8)
     set(SDL2_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.22/lib/x64/SDL2.lib;" CACHE PATH "SDL2 Library Directories")
     set(SDL2MAIN_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.22/lib/x64/SDL2main.lib" CACHE PATH "SDL2main Library Directories")
     set(SDL2_BINARIES "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.22/lib/x64/SDL2.dll" CACHE PATH "SDL2 Binary Directories")
+
+    set(ZSTD_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/zstd-v1.5.5/lib/x64/libzstd.lib;" CACHE PATH "Zstd Library Directories")
+    set(ZSTD_BINARIES "${CMAKE_CURRENT_LIST_DIR}/zstd-v1.5.5/lib/x64/libzstd.dll;" CACHE PATH "Zstd Binary Directories")
 else()
     set(SDL2_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.22/lib/x86/SDL2.lib;" CACHE PATH "SDL2 Library Directories")
     set(SDL2MAIN_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.22/lib/x86/SDL2main.lib" CACHE PATH "SDL2 Library Directories")
     set(SDL2_BINARIES "${CMAKE_CURRENT_LIST_DIR}/SDL2-2.0.22/lib/x86/SDL2.dll" CACHE PATH "SDL2 Binary Directories")
+
+    set(ZSTD_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/zstd-v1.5.5/lib/x86/libzstd.lib;" CACHE PATH "Zstd Library Directories")
+    set(ZSTD_BINARIES "${CMAKE_CURRENT_LIST_DIR}/zstd-v1.5.5/lib/x86/libzstd.dll;" CACHE PATH "Zstd Binary Directories")
 endif()
 
 add_library(SDL2 SHARED IMPORTED GLOBAL)
@@ -53,3 +61,9 @@ add_library(lua STATIC
 
 target_include_directories(lua PUBLIC
     "${CMAKE_CURRENT_LIST_DIR}/lua-5.4.4/src")
+
+add_library(Zstd SHARED IMPORTED GLOBAL)
+set_target_properties(Zstd PROPERTIES
+    IMPORTED_IMPLIB "${ZSTD_LIBRARIES}"
+    IMPORTED_LOCATION "${ZSTD_BINARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${ZSTD_INCLUDE_DIR}")

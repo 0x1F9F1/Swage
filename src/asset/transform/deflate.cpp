@@ -1,5 +1,7 @@
 #include "deflate.h"
 
+#include <zlib-ng.h>
+
 namespace Swage
 {
     static void* Z_alloc([[maybe_unused]] void* opaque, unsigned int items, unsigned int size)
@@ -11,6 +13,19 @@ namespace Swage
     {
         operator delete(address);
     }
+
+    class DeflateDecompressor : public BinaryTransform
+    {
+    public:
+        DeflateDecompressor(i32 window_bits);
+        ~DeflateDecompressor() override;
+
+        bool Reset() override;
+        bool Update() override;
+
+    private:
+        zng_stream inflater_ {};
+    };
 
     DeflateDecompressor::DeflateDecompressor(i32 window_bits)
     {
@@ -80,5 +95,10 @@ namespace Swage
         }
 
         return error == Z_OK;
+    }
+
+    Ptr<BinaryTransform> CreateDeflateDecompressor(i32 window_bits)
+    {
+        return swnew DeflateDecompressor(window_bits);
     }
 } // namespace Swage

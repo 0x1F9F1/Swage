@@ -11,8 +11,6 @@
 // However, it is unclear if this is actually the case, so just add a bit more.
 #define OODLELZ_BLOCK_MAX_COMPLEN (OODLELZ_BLOCK_LEN + 128)
 
-struct OodleLZDecoder;
-
 namespace Swage
 {
     enum OodleLZ_Compressor : i32
@@ -35,49 +33,5 @@ namespace Swage
         OodleLZ_Compressor_Leviathan,
     };
 
-    class OodleDecompressor : public BinaryTransform
-    {
-    public:
-        OodleDecompressor(i64 size, OodleLZ_Compressor compressor = OodleLZ_Compressor_Invalid);
-        ~OodleDecompressor();
-
-        bool Reset() override;
-        bool Update() override;
-
-        usize GetOptimalBufferSize() override;
-
-    private:
-        i32 FlushOutput();
-        i32 ConsumeInput();
-        i32 DecodeSome();
-
-        // The expected total size of the decompressed data
-        isize real_size_ {};
-
-        // Raw memory allocated for the decoder
-        void* state_ {};
-
-        // The actual decoder
-        OodleLZDecoder* decoder_ {};
-
-        // Total number of bytes decompressed
-        isize total_out_ {};
-
-        // The length of input data needed for the next block
-        usize needed_in_ {};
-
-        // The length of data in buffer_in_
-        usize buffered_in_ {};
-
-        // The range of pending data in buffer_out_
-        usize output_start_ {};
-        usize output_end_ {};
-
-        // Used to buffer the compressed data for a block
-        u8 buffer_in_[OODLELZ_BLOCK_MAX_COMPLEN];
-
-        // Used to buffer the decompresssed data from a block
-        // Also acts as sliding window
-        u8 buffer_out_[OODLELZ_BLOCK_LEN];
-    };
+    Ptr<BinaryTransform> CreateOodleDecompressor(i64 size, OodleLZ_Compressor compressor = OodleLZ_Compressor_Invalid);
 } // namespace Swage

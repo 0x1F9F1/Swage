@@ -1,6 +1,6 @@
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 
-link_libraries(SDL2 fmt imgui zlibstatic wolfcrypt)
+link_libraries(SDL2 fmt imgui zlibstatic wolfcrypt Zstd)
 
 SET(SWAGE_PCH "${CMAKE_CURRENT_LIST_DIR}/swpch.h")
 

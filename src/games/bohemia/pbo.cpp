@@ -41,7 +41,7 @@ namespace Swage::Bohemia
         Rc<Stream> result = swref PartialStream(DataOffset + data.Offset, data.RawSize, Input);
 
         if (data.PackingMethod == 0x43707273)
-            result = swref DecodeStream(std::move(result), swnew LzssDecompressor(), data.Size);
+            result = swref DecodeStream(std::move(result), CreateLzssDecompressor(), data.Size);
 
         return result;
     }
